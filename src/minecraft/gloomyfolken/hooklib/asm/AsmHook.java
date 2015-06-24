@@ -52,6 +52,10 @@ public class AsmHook implements Cloneable {
     private String targetMethodDescription;
     private String hookMethodDescription;
 
+    private AsmHook(){
+
+    }
+
     String getTargetClassName(){
         return targetClassName;
     }
