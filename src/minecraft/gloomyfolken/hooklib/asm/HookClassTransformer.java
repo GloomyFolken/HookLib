@@ -1,11 +1,11 @@
 package gloomyfolken.hooklib.asm;
 
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
-import gloomyfolken.mods.effects.asm.EffectsMod;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -130,7 +130,7 @@ public class HookClassTransformer implements IClassTransformer {
     }
 
     private void printUnexpectedNode(AbstractInsnNode node) {
-        EffectsMod.log("class=" + node.getClass().getCanonicalName() + ", type=" + node.getType() + ", opcode=" + node.getOpcode());
+        Logger.getLogger(LOG_PREFIX).log(Level.FINE, "class=" + node.getClass().getCanonicalName() + ", type=" + node.getType() + ", opcode=" + node.getOpcode());
     }
 
     private static final String LOG_PREFIX = "[HOOKLIB] ";
