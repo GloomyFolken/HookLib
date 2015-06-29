@@ -1,10 +1,8 @@
 package gloomyfolken.hooklib.asm;
 
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
-import gloomyfolken.mods.effects.asm.EffectsMod;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,63 +72,6 @@ public class HookClassTransformer implements IClassTransformer {
             }
         }
         return bytecode;
-    }
-    private void printNode(AbstractInsnNode node) {
-        if (node.getType() == 5) {
-            MethodInsnNode mnode = (MethodInsnNode) node;
-            System.out.println("MethodInsnNode: opcode=" + mnode.getOpcode() + ", owner=" + mnode.owner + ", name=" + mnode.name + ", desc="
-                    + mnode.desc);
-        } else if (node.getType() == 7) {
-            JumpInsnNode jnode = (JumpInsnNode) node;
-            System.out.println("JumpInsnNode: opcode=" + jnode.getOpcode() + ", label=" + jnode.label.getLabel());
-        } else if (node.getType() == 0) {
-            InsnNode inode = (InsnNode) node;
-            System.out.println("InsnNode: opcode=" + inode.getOpcode());
-        } else if (node.getType() == 8) {
-            LabelNode lnode = (LabelNode) node;
-            System.out.println("LabelNode: opcode= " + lnode.getOpcode() + ", label=" + lnode.getLabel().toString());
-        } else if (node.getType() == 15) {
-            System.out.println("LineNumberNode, opcode=" + node.getOpcode());
-        } else if (node instanceof FrameNode) {
-            FrameNode fnode = (FrameNode) node;
-            String out = "FrameNode: opcode=" + fnode.getOpcode() + ", type=" + fnode.type + ", nLocal="
-                    + (fnode.local == null ? -1 : fnode.local.size()) + ", local=";
-            if (fnode.local != null) {
-                for (Object obj : fnode.local) {
-                    out += obj == null ? "null" : obj.toString() + ";";
-                }
-            } else {
-                out += null;
-            }
-            out += ", nstack=" + (fnode.stack == null ? -1 : fnode.stack.size()) + ", stack=";
-            if (fnode.stack != null) {
-                for (Object obj : fnode.stack) {
-                    out += obj == null ? "null" : obj.toString() + ";";
-                }
-            } else {
-                out += null;
-            }
-            System.out.println(out);
-        } else if (node.getType() == 2) {
-            VarInsnNode vnode = (VarInsnNode) node;
-            System.out.println("VarInsnNode: opcode=" + vnode.getOpcode() + ", var=" + vnode.var);
-        } else if (node.getType() == 9) {
-            LdcInsnNode lnode = (LdcInsnNode) node;
-            System.out.println("LdcInsnNode: opcode=" + lnode.getOpcode() + ", cst=" + lnode.cst);
-        } else if (node.getType() == 4) {
-            FieldInsnNode fnode = (FieldInsnNode) node;
-            System.out.println("FieldInsnNode: opcode=" + fnode.getOpcode() + ", owner=" + fnode.owner + ", name=" + fnode.name + ", desc="
-                    + fnode.desc);
-        } else if (node.getType() == 3) {
-            TypeInsnNode tnode = (TypeInsnNode) node;
-            System.out.println("TypeInsnNode: opcode=" + tnode.getOpcode() + ", desc=" + tnode.desc);
-        } else {
-            printUnexpectedNode(node);
-        }
-    }
-
-    private void printUnexpectedNode(AbstractInsnNode node) {
-        EffectsMod.log("class=" + node.getClass().getCanonicalName() + ", type=" + node.getType() + ", opcode=" + node.getOpcode());
     }
 
     private static final String LOG_PREFIX = "[HOOKLIB] ";
