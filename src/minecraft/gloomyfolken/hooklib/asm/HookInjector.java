@@ -3,7 +3,6 @@ package gloomyfolken.hooklib.asm;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.tree.InsnNode;
 
 /**
  * Класс, непосредственно вставляющий хук в метод.
@@ -12,10 +11,12 @@ import org.objectweb.asm.tree.InsnNode;
 public abstract class HookInjector extends AdviceAdapter {
 
     protected final AsmHook hook;
+    public final String description;
 
     protected HookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
         super(Opcodes.ASM4, mv, access, name, desc);
         this.hook = hook;
+        this.description = desc;
     }
 
     /**

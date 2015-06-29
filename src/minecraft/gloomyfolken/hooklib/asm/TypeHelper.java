@@ -1,5 +1,6 @@
 package gloomyfolken.hooklib.asm;
 
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import org.objectweb.asm.Type;
 
 /**
@@ -43,7 +44,7 @@ public class TypeHelper {
         sb.append("L");
         sb.append(className.replace(".", "/"));
         sb.append(";");
-        return Type.getType(sb.toString());
+        return unmap(Type.getType(sb.toString()));
     }
 
     /**
@@ -64,6 +65,31 @@ public class TypeHelper {
      */
     public static Type getType(Class clazz){
         return Type.getType(clazz);
+    }
+
+
+    static Type unmap(Type type){
+        if (!HookLibPlugin.obf) return type;
+
+        // void or primitive
+        if (type.getSort() < 9) return type;
+
+        //array
+        if (type.getSort() == 9){
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < type.getDimensions(); i++){
+                sb.append("[");
+            }
+            sb.append("L");
+            sb.append(unmap(type.getElementType()).getInternalName());
+            sb.append(";");
+            return Type.getType(sb.toString());
+        } else if (type.getSort() == 10){
+            String unmappedName = FMLDeobfuscatingRemapper.INSTANCE.unmap(type.getInternalName());
+            return Type.getType("L" + unmappedName + ";");
+        } else {
+            throw new IllegalArgumentException("Can not unmap method type!");
+        }
     }
 
 }

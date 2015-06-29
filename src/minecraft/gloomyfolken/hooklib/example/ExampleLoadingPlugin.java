@@ -42,27 +42,27 @@ public class ExampleLoadingPlugin implements IFMLLoadingPlugin {
          * Цель: при каждом ресайзе окна выводить в консоль новый размер
          */
         AsmHook.newBuilder()
-                .setTargetClassName("net.minecraft.client.Minecraft") // модифицируем класс Minecraft
-                .setTargetMethodName("resize") // модифицируем метод resize
-                .setTargetMethodObfuscatedName("a") // указываем обфусцированное название метода
-                .appendTargetMethodParameters(Type.INT_TYPE, Type.INT_TYPE) // указываем параметры метода
-                .setHooksClassName("gloomyfolken.hooklib.example.ClientHooks") // хук-метод находится в этом классе
-                .setHookMethodName("onResize") // хук-метод называется onResize
-                .appendHookMethodParameter(Type.INT_TYPE, 1) // добавляем параметр хук-метода, передаем в него par1
-                .appendHookMethodParameter(Type.INT_TYPE, 2) // добавляем параметр хук-метода, передаем в него par2
+                .setTargetClass("net.minecraft.client.Minecraft") // модифицируем класс Minecraft
+                .setTargetMethod("resize") // модифицируем метод resize
+                .setTargetMethodObfName("a") // указываем обфусцированное название метода
+                .addTargetMethodParameters(Type.INT_TYPE, Type.INT_TYPE) // указываем параметры метода
+                .setHookClass("gloomyfolken.hooklib.example.ClientHooks") // хук-метод находится в этом классе
+                .setHookMethod("onResize") // хук-метод называется onResize
+                .addHookMethodParameter(Type.INT_TYPE, 1) // добавляем параметр хук-метода, передаем в него par1
+                .addHookMethodParameter(Type.INT_TYPE, 2) // добавляем параметр хук-метода, передаем в него par2
                 .buildAndRegister(); // создаем и регистрируем хук
 
         /**
          * Цель: увеличить урон всех мечей вдвое
          */
         AsmHook.newBuilder()
-                .setTargetClassName("net.minecraft.item.ItemSword")
-                .setTargetMethodName("<init>") // модифицируем конструктор, обфусцированное имя не нужно
-                .appendTargetMethodParameters(Type.INT_TYPE, TypeHelper.getType("net.minecraft.item.EnumToolMaterial"))
-                .setHooksClassName("gloomyfolken.hooklib.example.CommonHooks")
-                .setHookMethodName("twiceDamage")
+                .setTargetClass("net.minecraft.item.ItemSword")
+                .setTargetMethod("<init>") // модифицируем конструктор, обфусцированное имя не нужно
+                .addTargetMethodParameters(Type.INT_TYPE, TypeHelper.getType("net.minecraft.item.EnumToolMaterial"))
+                .setHookClass("gloomyfolken.hooklib.example.CommonHooks")
+                .setHookMethod("twiceDamage")
                 // нулевой параметр - это this
-                .appendHookMethodParameter(TypeHelper.getType("net.minecraft.item.ItemSword"), 0)
+                .addHookMethodParameter("net.minecraft.item.ItemSword", 0)
                 .setInjectorFactory(AsmHook.ON_EXIT_FACTORY) // вставляем хук в конец метода
                 .buildAndRegister();
 
@@ -71,14 +71,14 @@ public class ExampleLoadingPlugin implements IFMLLoadingPlugin {
          * P.S: фордж перехватывает получение показателя брони, ну а мы перехватим перехватчик :D
          */
         AsmHook.newBuilder()
-                .setTargetClassName("net.minecraftforge.common.ForgeHooks")
-                .setTargetMethodName("getTotalArmorValue")
-                .appendTargetMethodParameters(TypeHelper.getType("net.minecraft.entity.player.EntityPlayer"))
+                .setTargetClass("net.minecraftforge.common.ForgeHooks")
+                .setTargetMethod("getTotalArmorValue")
+                .addTargetMethodParameters("net.minecraft.entity.player.EntityPlayer")
                 .setTargetMethodReturnType(Type.INT_TYPE) // целевой метод возвращает int
-                .setHooksClassName("gloomyfolken.hooklib.example.CommonHooks")
-                .setHookMethodName("halfArmor")
+                .setHookClass("gloomyfolken.hooklib.example.CommonHooks")
+                .setHookMethod("halfArmor")
                 // передаем в хук-метод значение, которое иначе было бы передано в return
-                .appendReturnValueAsHookMethodParameter()
+                .addReturnValueToHookMethodParameters()
                 .setInjectorFactory(AsmHook.ON_EXIT_FACTORY)
                 .setReturnCondition(ReturnCondition.ALWAYS) // всегда вызываем return после хука
                 .setReturnValue(ReturnValue.HOOK_RETURN_VALUE) // передаем в return значение, которое вернул хук-метод
@@ -88,9 +88,9 @@ public class ExampleLoadingPlugin implements IFMLLoadingPlugin {
          * Цель: запретить возможность телепортироваться в ад и обратно чаще, чем раз в пять секунд.
          */
         AsmHook.newBuilder()
-                .setTargetClassName("net.minecraft.entity.player.EntityPlayer")
-                .setTargetMethodName("getPortalCooldown")
-                .setTargetMethodObfuscatedName("ac")
+                .setTargetClass("net.minecraft.entity.player.EntityPlayer")
+                .setTargetMethod("getPortalCooldown")
+                .setTargetMethodObfName("ac")
                 .setTargetMethodReturnType(Type.INT_TYPE)
                 // Хук-метод можно не указывать, если используется ReturnCondition.ALWAYS.
                 .setReturnCondition(ReturnCondition.ALWAYS)

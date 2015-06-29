@@ -1,8 +1,10 @@
 package gloomyfolken.hooklib.asm;
 
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
+import gloomyfolken.mods.effects.asm.EffectsMod;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +40,8 @@ public class HookClassTransformer implements IClassTransformer {
                 int numHooks = hooks.size();
                 int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
                 int minorVersion =  ((bytecode[4]&0xFF)<<8) | (bytecode[5]&0xFF);
-                if (majorVersion > 50){
+                boolean java7 = majorVersion > 50;
+                if (java7){
                     warning("Bytecode version of class " + newName + " is " + majorVersion + "." + minorVersion + ".");
                     warning("This is Java 1.7+, whereas Minecraft works on Java 1.6 (bytecode version 50).");
                     warning("Enabling COMPUTE_FRAMES, but it probably will crash minecraft on the server side.");
@@ -47,10 +50,9 @@ public class HookClassTransformer implements IClassTransformer {
                 }
 
                 ClassReader cr = new ClassReader(bytecode);
-                ClassWriter cw = new ClassWriter(majorVersion > 50 ? ClassWriter.COMPUTE_FRAMES : 0);
-
+                ClassWriter cw = new ClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : 0);
                 HookInjectorClassWriter hooksWriter = new HookInjectorClassWriter(cw, hooks);
-                cr.accept(hooksWriter, majorVersion > 50 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
+                cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 
                 int numInjectedHooks = numHooks - hooksWriter.hooks.size();
                 info("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
@@ -72,6 +74,63 @@ public class HookClassTransformer implements IClassTransformer {
             }
         }
         return bytecode;
+    }
+    private void printNode(AbstractInsnNode node) {
+        if (node.getType() == 5) {
+            MethodInsnNode mnode = (MethodInsnNode) node;
+            System.out.println("MethodInsnNode: opcode=" + mnode.getOpcode() + ", owner=" + mnode.owner + ", name=" + mnode.name + ", desc="
+                    + mnode.desc);
+        } else if (node.getType() == 7) {
+            JumpInsnNode jnode = (JumpInsnNode) node;
+            System.out.println("JumpInsnNode: opcode=" + jnode.getOpcode() + ", label=" + jnode.label.getLabel());
+        } else if (node.getType() == 0) {
+            InsnNode inode = (InsnNode) node;
+            System.out.println("InsnNode: opcode=" + inode.getOpcode());
+        } else if (node.getType() == 8) {
+            LabelNode lnode = (LabelNode) node;
+            System.out.println("LabelNode: opcode= " + lnode.getOpcode() + ", label=" + lnode.getLabel().toString());
+        } else if (node.getType() == 15) {
+            System.out.println("LineNumberNode, opcode=" + node.getOpcode());
+        } else if (node instanceof FrameNode) {
+            FrameNode fnode = (FrameNode) node;
+            String out = "FrameNode: opcode=" + fnode.getOpcode() + ", type=" + fnode.type + ", nLocal="
+                    + (fnode.local == null ? -1 : fnode.local.size()) + ", local=";
+            if (fnode.local != null) {
+                for (Object obj : fnode.local) {
+                    out += obj == null ? "null" : obj.toString() + ";";
+                }
+            } else {
+                out += null;
+            }
+            out += ", nstack=" + (fnode.stack == null ? -1 : fnode.stack.size()) + ", stack=";
+            if (fnode.stack != null) {
+                for (Object obj : fnode.stack) {
+                    out += obj == null ? "null" : obj.toString() + ";";
+                }
+            } else {
+                out += null;
+            }
+            System.out.println(out);
+        } else if (node.getType() == 2) {
+            VarInsnNode vnode = (VarInsnNode) node;
+            System.out.println("VarInsnNode: opcode=" + vnode.getOpcode() + ", var=" + vnode.var);
+        } else if (node.getType() == 9) {
+            LdcInsnNode lnode = (LdcInsnNode) node;
+            System.out.println("LdcInsnNode: opcode=" + lnode.getOpcode() + ", cst=" + lnode.cst);
+        } else if (node.getType() == 4) {
+            FieldInsnNode fnode = (FieldInsnNode) node;
+            System.out.println("FieldInsnNode: opcode=" + fnode.getOpcode() + ", owner=" + fnode.owner + ", name=" + fnode.name + ", desc="
+                    + fnode.desc);
+        } else if (node.getType() == 3) {
+            TypeInsnNode tnode = (TypeInsnNode) node;
+            System.out.println("TypeInsnNode: opcode=" + tnode.getOpcode() + ", desc=" + tnode.desc);
+        } else {
+            printUnexpectedNode(node);
+        }
+    }
+
+    private void printUnexpectedNode(AbstractInsnNode node) {
+        EffectsMod.log("class=" + node.getClass().getCanonicalName() + ", type=" + node.getType() + ", opcode=" + node.getOpcode());
     }
 
     private static final String LOG_PREFIX = "[HOOKLIB] ";
