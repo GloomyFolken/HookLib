@@ -147,7 +147,7 @@ public class AsmHook implements Cloneable {
                 if (hookMethodReturnType == LONG_TYPE || hookMethodReturnType == DOUBLE_TYPE) {
                     inj.pop2();
                 } else {
-                    //inj.pop();
+                    inj.pop();
                 }
             }
 
