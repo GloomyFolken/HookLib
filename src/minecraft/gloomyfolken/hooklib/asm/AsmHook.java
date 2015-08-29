@@ -80,6 +80,7 @@ public class AsmHook implements Cloneable {
         }
 
         // вызываем хук-метод
+        int hookResultLocalId = -1;
         if (hasHookMethod()) {
             for (int i = 0; i < hookMethodParameters.size(); i++) {
                 Type parameterType = hookMethodParameters.get(i);
@@ -89,28 +90,28 @@ public class AsmHook implements Cloneable {
             }
 
             inj.visitMethodInsn(INVOKESTATIC, hooksClassName.replace(".", "/"), hookMethodName, hookMethodDescription);
+
+            if (returnValue == ReturnValue.HOOK_RETURN_VALUE || returnCondition.requiresHookMethod) {
+                hookResultLocalId = inj.newLocal(hookMethodReturnType);
+                inj.storeLocal(hookResultLocalId, hookMethodReturnType);
+            }
         }
 
         // вызываем return
         if (returnCondition != ReturnCondition.NEVER) {
             Label label = inj.newLabel();
 
-            // клонируем значение наверху стака, если его нужно проверить, а потом вернуть
-            if (returnValue == ReturnValue.HOOK_RETURN_VALUE && returnCondition != returnCondition.ALWAYS) {
-                if (hookMethodReturnType == LONG_TYPE || hookMethodReturnType == DOUBLE_TYPE) {
-                    inj.dup2();
-                } else {
-                    inj.dup();
-                }
-            }
 
             // вставляем GOTO-переход к label'у после вызова return
-            if (returnCondition == ReturnCondition.ON_TRUE) {
-                inj.visitJumpInsn(IFEQ, label);
-            } else if (returnCondition == ReturnCondition.ON_NULL) {
-                inj.visitJumpInsn(IFNONNULL, label);
-            } else if (returnCondition == ReturnCondition.ON_NOT_NULL) {
-                inj.visitJumpInsn(IFNULL, label);
+            if (returnCondition != ReturnCondition.ALWAYS) {
+                inj.loadLocal(hookResultLocalId, hookMethodReturnType);
+                if (returnCondition == ReturnCondition.ON_TRUE) {
+                    inj.visitJumpInsn(IFEQ, label);
+                } else if (returnCondition == ReturnCondition.ON_NULL) {
+                    inj.visitJumpInsn(IFNONNULL, label);
+                } else if (returnCondition == ReturnCondition.ON_NOT_NULL) {
+                    inj.visitJumpInsn(IFNULL, label);
+                }
             }
 
             // вставляем в стак значение, которое необходимо вернуть
@@ -118,6 +119,8 @@ public class AsmHook implements Cloneable {
                 inj.visitInsn(Opcodes.ACONST_NULL);
             } else if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) {
                 inj.visitLdcInsn(primitiveConstant);
+            } else if (returnValue == ReturnValue.HOOK_RETURN_VALUE) {
+                inj.loadLocal(hookResultLocalId, hookMethodReturnType);
             }
 
             // вызываем return
@@ -141,20 +144,11 @@ public class AsmHook implements Cloneable {
             if (returnCondition != ReturnCondition.ALWAYS) {
                 inj.visitLabel(label); // собственно label
             }
+        }
 
-            //убираем из стека значение, если оно не пригодилось для return
-            if (returnValue == ReturnValue.HOOK_RETURN_VALUE) {
-                if (hookMethodReturnType == LONG_TYPE || hookMethodReturnType == DOUBLE_TYPE) {
-                    inj.pop2();
-                } else {
-                    inj.pop();
-                }
-            }
-
-            //кладем в стек значение, которое шло в return
-            if (hasReturnValueParameter) {
-                injectVarInsn(inj, targetMethodReturnType, returnLocalId);
-            }
+        //кладем в стек значение, которое шло в return
+        if (hasReturnValueParameter) {
+            injectVarInsn(inj, targetMethodReturnType, returnLocalId);
         }
     }
 
@@ -629,9 +623,7 @@ public class AsmHook implements Cloneable {
          * Создает хук по заданым параметрам и сразу же его регистрирует.
          */
         public void buildAndRegister() {
-            if (HookClassTransformer.instance != null) {
-                HookClassTransformer.instance.registerHook(build());
-            }
+            HookClassTransformer.registerHook(build());
         }
     }
 

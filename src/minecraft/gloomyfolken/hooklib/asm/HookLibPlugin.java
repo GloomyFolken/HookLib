@@ -1,12 +1,16 @@
 package gloomyfolken.hooklib.asm;
 
+import cpw.mods.fml.relauncher.CoreModManager;
+import cpw.mods.fml.relauncher.FMLRelaunchLog;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 public class HookLibPlugin implements IFMLLoadingPlugin {
 
-    static boolean obf;
+    private static boolean obf;
+    private static boolean cheched;
 
     // 1.6.x only
     public String[] getLibraryRequestClass() {
@@ -34,7 +38,20 @@ public class HookLibPlugin implements IFMLLoadingPlugin {
     }
 
     @Override
-    public void injectData(Map<String, Object> data) {
-        obf = ((Boolean)data.get("runtimeDeobfuscationEnabled"));
+    public void injectData(Map<String, Object> data) {}
+
+    public static boolean getObfuscated() {
+        if (!cheched) {
+            try {
+                Field deobfField = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
+                deobfField.setAccessible(true);
+                obf = !deobfField.getBoolean(null);
+                FMLRelaunchLog.info("[HOOKLIB] " + " Obfuscated: " + obf);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            cheched = true;
+        }
+        return obf;
     }
 }

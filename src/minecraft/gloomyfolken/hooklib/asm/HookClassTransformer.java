@@ -13,13 +13,13 @@ public class HookClassTransformer implements IClassTransformer {
 
     public static HookClassTransformer instance;
 
-    private HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
+    private static HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 
     public HookClassTransformer(){
         instance = this;
     }
 
-    public void registerHook(AsmHook hook){
+    public static void registerHook(AsmHook hook){
         if (hooksMap.containsKey(hook.getTargetClassName())){
             hooksMap.get(hook.getTargetClassName()).add(hook);
         } else {
@@ -76,12 +76,15 @@ public class HookClassTransformer implements IClassTransformer {
 
     private static final String LOG_PREFIX = "[HOOKLIB] ";
 
-    private void severe(String msg){
+    private static void severe(String msg){
         FMLRelaunchLog.severe(LOG_PREFIX + msg);
     }
 
-    private void info(String msg){
+    private static void info(String msg){
         FMLRelaunchLog.info(LOG_PREFIX + msg);
+    }
+    private static void finest(String msg){
+        FMLRelaunchLog.finest(LOG_PREFIX + msg);
     }
 
     private void warning(String msg){
@@ -104,7 +107,7 @@ public class HookClassTransformer implements IClassTransformer {
             Iterator<AsmHook> it = hooks.iterator();
             while (it.hasNext()) {
                 AsmHook hook = it.next();
-                if (name.equals(hook.getTargetMethodName(HookLibPlugin.obf))
+                if (name.equals(hook.getTargetMethodName(HookLibPlugin.getObfuscated()))
                         && desc.equals(hook.getTargetMethodDescription())){
                     mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook);
                     it.remove();

@@ -1,6 +1,7 @@
 package gloomyfolken.hooklib.asm;
 
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import cpw.mods.fml.relauncher.FMLRelaunchLog;
 import org.objectweb.asm.Type;
 
 /**
@@ -44,6 +45,9 @@ public class TypeHelper {
         sb.append("L");
         sb.append(className.replace(".", "/"));
         sb.append(";");
+        Type mapped = Type.getType(sb.toString());
+        Type unmapped = unmap(mapped);
+        FMLRelaunchLog.info("[HOOKLIB] Unmapped from " + mapped.getInternalName() + " to " + unmapped.getInternalName());
         return unmap(Type.getType(sb.toString()));
     }
 
@@ -69,7 +73,7 @@ public class TypeHelper {
 
 
     static Type unmap(Type type){
-        if (!HookLibPlugin.obf) return type;
+        if (!HookLibPlugin.getObfuscated()) return type;
 
         // void or primitive
         if (type.getSort() < 9) return type;
