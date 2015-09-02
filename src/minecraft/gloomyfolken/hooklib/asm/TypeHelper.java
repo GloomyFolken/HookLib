@@ -45,10 +45,11 @@ public class TypeHelper {
         sb.append("L");
         sb.append(className.replace(".", "/"));
         sb.append(";");
-        Type mapped = Type.getType(sb.toString());
+        /*Type mapped = Type.getType(sb.toString());
         Type unmapped = unmap(mapped);
         FMLRelaunchLog.info("[HOOKLIB] Unmapped from " + mapped.getInternalName() + " to " + unmapped.getInternalName());
-        return unmap(Type.getType(sb.toString()));
+        return unmap(Type.getType(sb.toString()));*/
+        return Type.getType(sb.toString());
     }
 
     /**
@@ -71,8 +72,20 @@ public class TypeHelper {
         return Type.getType(clazz);
     }
 
+    static String mapDesc(String desc) {
+        if (!HookLibPlugin.getObfuscated()) return desc;
 
-    static Type unmap(Type type){
+        Type methodType = Type.getMethodType(desc);
+        Type mappedReturnType = map(methodType.getReturnType());
+        Type[] argTypes = methodType.getArgumentTypes();
+        Type[] mappedArgTypes = new Type[argTypes.length];
+        for (int i = 0; i < mappedArgTypes.length; i++) {
+            mappedArgTypes[i] = map(argTypes[i]);
+        }
+        return Type.getMethodDescriptor(mappedReturnType, mappedArgTypes);
+    }
+
+    static Type map(Type type){
         if (!HookLibPlugin.getObfuscated()) return type;
 
         // void or primitive
@@ -85,14 +98,14 @@ public class TypeHelper {
                 sb.append("[");
             }
             sb.append("L");
-            sb.append(unmap(type.getElementType()).getInternalName());
+            sb.append(map(type.getElementType()).getInternalName());
             sb.append(";");
             return Type.getType(sb.toString());
         } else if (type.getSort() == 10){
-            String unmappedName = FMLDeobfuscatingRemapper.INSTANCE.unmap(type.getInternalName());
+            String unmappedName = FMLDeobfuscatingRemapper.INSTANCE.map(type.getInternalName());
             return Type.getType("L" + unmappedName + ";");
         } else {
-            throw new IllegalArgumentException("Can not unmap method type!");
+            throw new IllegalArgumentException("Can not map method type!");
         }
     }
 

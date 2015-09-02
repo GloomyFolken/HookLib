@@ -12,6 +12,7 @@ import java.util.List;
 public class HookClassTransformer implements IClassTransformer {
 
     public static HookClassTransformer instance;
+    public static final boolean DEBUG = false;
 
     private static HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 
@@ -20,6 +21,9 @@ public class HookClassTransformer implements IClassTransformer {
     }
 
     public static void registerHook(AsmHook hook){
+        if (DEBUG) {
+            info("Registered hook " + hook);
+        }
         if (hooksMap.containsKey(hook.getTargetClassName())){
             hooksMap.get(hook.getTargetClassName()).add(hook);
         } else {
@@ -35,6 +39,12 @@ public class HookClassTransformer implements IClassTransformer {
         if (hooks != null){
             try {
                 info("Injecting hooks into class " + newName);
+                if (DEBUG) {
+                    info("Hooks list: ");
+                    for (AsmHook hook : hooks) {
+                        info(hook.toString());
+                    }
+                }
                 int numHooks = hooks.size();
                 int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
                 int minorVersion =  ((bytecode[4]&0xFF)<<8) | (bytecode[5]&0xFF);
@@ -104,11 +114,18 @@ public class HookClassTransformer implements IClassTransformer {
         public MethodVisitor visitMethod(int access, String name, String desc,
                                          String signature, String[] exceptions) {
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+            String mappedDesc = TypeHelper.mapDesc(desc);
+            if (DEBUG) {
+                info("Visiting method " + name + desc + " (" + mappedDesc + ")");
+            }
             Iterator<AsmHook> it = hooks.iterator();
             while (it.hasNext()) {
                 AsmHook hook = it.next();
                 if (name.equals(hook.getTargetMethodName(HookLibPlugin.getObfuscated()))
-                        && desc.equals(hook.getTargetMethodDescription())){
+                        && mappedDesc.equals(hook.getTargetMethodDescription())){
+                    if (DEBUG) {
+                        info("Found target method for hook " + hook);
+                    }
                     mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook);
                     it.remove();
                 }

@@ -171,7 +171,21 @@ public class AsmHook implements Cloneable {
 
     @Override
     public String toString() {
-        return "AsmHook: " + targetClassName + "#" + targetMethodName + " -> " + hooksClassName + "#" + hookMethodName;
+        StringBuilder sb = new StringBuilder();
+        sb.append("AsmHook: ");
+
+        sb.append(targetClassName).append('#').append(targetMethodName);
+        sb.append(targetMethodDescription);
+        sb.append(" -> ");
+        sb.append(hooksClassName).append('#').append(hookMethodName);
+        sb.append(hookMethodDescription);
+
+        sb.append(", ReturnCondition=" + returnCondition);
+        sb.append(", ReturnValue=" + returnValue);
+        if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) sb.append(", Constant=" + primitiveConstant);
+        sb.append(", InjectorFactory: " + injectorFactory.getClass().getName());
+
+        return sb.toString();
     }
 
     /**
