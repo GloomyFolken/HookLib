@@ -15,28 +15,26 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MinecraftClassTransformer extends HookClassTransformer implements IClassTransformer {
 
     static MinecraftClassTransformer instance;
-    private HashMap<Integer, String> methodNames;
+    private Map<Integer, String> methodNames;
 
     public MinecraftClassTransformer() {
         instance = this;
-        FMLRelaunchLog.makeLog("HookLib");
-        logger = Logger.getLogger("HookLib");
-        logger.fine("Loading secondary class transformer...");
 
         if (HookLibPlugin.getObfuscated()) {
             try {
                 long timeStart = System.currentTimeMillis();
                 methodNames = loadMethodNames();
                 long time = System.currentTimeMillis() - timeStart;
-                logger.log(Level.FINE, "Methods dictionary loaded in " + time + " ms");
+                logger.debug("Methods dictionary loaded in " + time + " ms");
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Can not load obfuscated method names",  e);
+                logger.severe("Can not load obfuscated method names",  e);
             }
         }
 
@@ -68,7 +66,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
         return new HookInjectorClassVisitor(cw, hooks) {
             @Override
             protected boolean isTargetMethod(AsmHook hook, String name, String desc) {
-                if (name.startsWith("func_")) {
+                if (HookLibPlugin.getObfuscated() && name.startsWith("func_")) {
                     int first = name.indexOf('_');
                     int second = name.indexOf('_', first+1);
                     int methodId = Integer.valueOf(name.substring(first+1, second));

@@ -38,7 +38,7 @@ public class HookContainerParser {
     }
 
     protected void parseHooks(String className) {
-        transformer.logger.finest("Parsing hooks contatiner " + className);
+        transformer.logger.debug("Parsing hooks contatiner " + className);
         parseHooks(ReadClassHelper.getClassData(className));
     }
 

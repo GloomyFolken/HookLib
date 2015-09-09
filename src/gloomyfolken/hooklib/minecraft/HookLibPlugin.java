@@ -25,7 +25,7 @@ public class HookLibPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"gloomyfolken.hooklib.minecraft.PrimaryClassTransformer"};
+        return new String[]{PrimaryClassTransformer.class.getName()};
     }
 
     @Override

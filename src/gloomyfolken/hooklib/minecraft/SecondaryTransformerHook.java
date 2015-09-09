@@ -12,7 +12,7 @@ public class SecondaryTransformerHook {
     @Hook
     public static void injectData(Loader loader, Object... data) {
         LaunchClassLoader classLoader = (LaunchClassLoader)SecondaryTransformerHook.class.getClassLoader();
-        classLoader.registerTransformer("gloomyfolken.hooklib.minecraft.MinecraftClassTransformer");
+        classLoader.registerTransformer(MinecraftClassTransformer.class.getName());
     }
 
 }

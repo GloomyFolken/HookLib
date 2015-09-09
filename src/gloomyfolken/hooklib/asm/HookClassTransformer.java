@@ -1,5 +1,6 @@
 package gloomyfolken.hooklib.asm;
 
+import gloomyfolken.hooklib.asm.HookLogger.SystemOutLogger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
 
 public class HookClassTransformer {
 
-    public Logger logger = Logger.getGlobal();
+    public HookLogger logger = new SystemOutLogger();
     protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
     private HookContainerParser containerParser = new HookContainerParser(this);
 
@@ -41,7 +42,7 @@ public class HookClassTransformer {
         if (hooks != null){
             Collections.sort(hooks);
             try {
-                logger.finest("Injecting hooks into class " + className);
+                logger.debug("Injecting hooks into class " + className);
                 int numHooks = hooks.size();
                 int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
                 boolean java7 = majorVersion > 50;
@@ -52,7 +53,7 @@ public class HookClassTransformer {
                 cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 
                 int numInjectedHooks = numHooks - hooksWriter.hooks.size();
-                logger.finest("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
+                logger.debug("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
                 for (AsmHook notInjected : hooksWriter.hooks){
                     logger.warning("Can not found target method of hook " + notInjected);
                 }
@@ -64,7 +65,7 @@ public class HookClassTransformer {
                 for (AsmHook hook : hooks) {
                     logger.severe(hook.toString());
                 }
-                logger.log(Level.SEVERE, "Stack trace:", e);
+                logger.severe("Stack trace:", e);
             }
         }
         return bytecode;

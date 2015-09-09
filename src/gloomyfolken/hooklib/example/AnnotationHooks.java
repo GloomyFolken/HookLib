@@ -30,16 +30,6 @@ public class AnnotationHooks {
     }
 
     /**
-     * Цель: увеличить урон всех мечей вдвое
-     */
-    @Hook(targetMethod = "<init>", injectOnExit = true)
-    public static void twiceDamage(ItemSword sword, int id, EnumToolMaterial toolMaterial) {
-        // поле нужно объявить публичным, чтобы оно скомпилировалось, но никаких изменений в собранном майне
-        // не потребуется. Фордж при запуске делает все поля публичными.
-        sword.weaponDamage *= 2;
-    }
-
-    /**
      * Цель: запретить возможность телепортироваться в ад и обратно чаще, чем раз в пять секунд.
      */
     @Hook(returnCondition = ReturnCondition.ALWAYS, intReturnConstant = 100)

@@ -13,12 +13,19 @@ import java.util.List;
 
 public class PrimaryClassTransformer extends HookClassTransformer implements IClassTransformer {
 
-    static PrimaryClassTransformer instance;
+    // костыль для случая, когда другой мод дергает хуклиб раньше, чем она запустилась
+    static PrimaryClassTransformer instance = new PrimaryClassTransformer();
     boolean registeredSecondTransformer;
 
     public PrimaryClassTransformer() {
+        if (instance != null) {
+            // переносим хуки, которые уже успели нарегистрировать
+            this.hooksMap.putAll(PrimaryClassTransformer.instance.getHooksMap());
+            PrimaryClassTransformer.instance.getHooksMap().clear();
+        } else {
+            registerHookContainer(SecondaryTransformerHook.class.getName());
+        }
         instance = this;
-        registerHookContainer("gloomyfolken.hooklib.minecraft.SecondaryTransformerHook");
     }
 
     @Override
