@@ -1,29 +1,23 @@
 package gloomyfolken.hooklib.asm;
 
-import cpw.mods.fml.relauncher.FMLRelaunchLog;
-import net.minecraft.launchwrapper.IClassTransformer;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class HookClassTransformer implements IClassTransformer {
+public class HookClassTransformer {
 
-    public static HookClassTransformer instance;
-    public static final boolean DEBUG = false;
+    public Logger logger = Logger.getGlobal();
+    protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
+    private HookContainerParser containerParser = new HookContainerParser(this);
 
-    private static HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
-
-    public HookClassTransformer(){
-        instance = this;
-    }
-
-    public static void registerHook(AsmHook hook){
-        if (DEBUG) {
-            info("Registered hook " + hook);
-        }
+    public void registerHook(AsmHook hook){
         if (hooksMap.containsKey(hook.getTargetClassName())){
             hooksMap.get(hook.getTargetClassName()).add(hook);
         } else {
@@ -33,105 +27,51 @@ public class HookClassTransformer implements IClassTransformer {
         }
     }
 
-    @Override
-    public byte[] transform(String name, String newName, byte[] bytecode) {
-        List<AsmHook> hooks = hooksMap.get(newName);
+    public void registerHookContainer(String className) {
+        containerParser.parseHooks(className);
+    }
+
+    public void registerHookContainer(InputStream classData) {
+        containerParser.parseHooks(classData);
+    }
+
+    public byte[] transform(String className, byte[] bytecode) {
+        List<AsmHook> hooks = hooksMap.get(className);
+
         if (hooks != null){
+            Collections.sort(hooks);
             try {
-                info("Injecting hooks into class " + newName);
-                if (DEBUG) {
-                    info("Hooks list: ");
-                    for (AsmHook hook : hooks) {
-                        info(hook.toString());
-                    }
-                }
+                logger.finest("Injecting hooks into class " + className);
                 int numHooks = hooks.size();
                 int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
-                int minorVersion =  ((bytecode[4]&0xFF)<<8) | (bytecode[5]&0xFF);
                 boolean java7 = majorVersion > 50;
-                if (java7){
-                    warning("Bytecode version of class " + newName + " is " + majorVersion + "." + minorVersion + ".");
-                    warning("This is Java 1.7+, whereas Minecraft works on Java 1.6 (bytecode version 50).");
-                    warning("Enabling COMPUTE_FRAMES, but it probably will crash minecraft on the server side.");
-                    warning("If you are in an MCP environment, you should better set javac version to 1.6.");
-                    warning("If you are not, something is going completly wrong.");
-                }
 
                 ClassReader cr = new ClassReader(bytecode);
                 ClassWriter cw = new ClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : 0);
-                HookInjectorClassWriter hooksWriter = new HookInjectorClassWriter(cw, hooks);
+                HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
                 cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 
                 int numInjectedHooks = numHooks - hooksWriter.hooks.size();
-                info("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
+                logger.finest("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
                 for (AsmHook notInjected : hooksWriter.hooks){
-                    warning("Can not found target method of hook " + notInjected);
+                    logger.warning("Can not found target method of hook " + notInjected);
                 }
 
-                hooksMap.remove(newName);
                 return cw.toByteArray();
             } catch (Exception e){
-                severe("A problem has occured during transformation of class " + newName + ".");
-                severe("No hook will be injected into this class.");
-                severe("Attached hooks:");
+                logger.severe("A problem has occured during transformation of class " + className + ".");
+                logger.severe("Attached hooks:");
                 for (AsmHook hook : hooks) {
-                    severe(hook.toString());
+                    logger.severe(hook.toString());
                 }
-                severe("Stack trace:");
-                e.printStackTrace();
+                logger.log(Level.SEVERE, "Stack trace:", e);
             }
         }
         return bytecode;
     }
 
-    private static final String LOG_PREFIX = "[HOOKLIB] ";
-
-    private static void severe(String msg){
-        FMLRelaunchLog.severe(LOG_PREFIX + msg);
-    }
-
-    private static void info(String msg){
-        FMLRelaunchLog.info(LOG_PREFIX + msg);
-    }
-    private static void finest(String msg){
-        FMLRelaunchLog.finest(LOG_PREFIX + msg);
-    }
-
-    private void warning(String msg){
-        FMLRelaunchLog.warning(LOG_PREFIX + msg);
-    }
-
-    private static class HookInjectorClassWriter extends ClassVisitor {
-
-        List<AsmHook> hooks;
-
-        public HookInjectorClassWriter(ClassWriter cv, List<AsmHook> hooks) {
-            super(Opcodes.ASM4, cv);
-            this.hooks = hooks;
-        }
-
-        @Override
-        public MethodVisitor visitMethod(int access, String name, String desc,
-                                         String signature, String[] exceptions) {
-            MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-            String mappedDesc = TypeHelper.mapDesc(desc);
-            if (DEBUG) {
-                info("Visiting method " + name + desc + " (" + mappedDesc + ")");
-            }
-            Iterator<AsmHook> it = hooks.iterator();
-            while (it.hasNext()) {
-                AsmHook hook = it.next();
-                if (name.equals(hook.getTargetMethodName(HookLibPlugin.getObfuscated()))
-                        && mappedDesc.equals(hook.getTargetMethodDescription())){
-                    if (DEBUG) {
-                        info("Found target method for hook " + hook);
-                    }
-                    mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook);
-                    it.remove();
-                }
-            }
-            return mv;
-        }
+    protected HookInjectorClassVisitor createInjectorClassVisitor(ClassWriter cw, List<AsmHook> hooks) {
+        return new HookInjectorClassVisitor(cw, hooks);
     }
 
 }

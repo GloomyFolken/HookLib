@@ -1,7 +1,9 @@
 package gloomyfolken.hooklib.asm;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
 /**
@@ -11,22 +13,29 @@ import org.objectweb.asm.commons.AdviceAdapter;
 public abstract class HookInjector extends AdviceAdapter {
 
     protected final AsmHook hook;
-    public final String description;
+    public final Type methodType;
+    public final boolean isStatic;
+    protected static boolean visitingHook;
 
     protected HookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
         super(Opcodes.ASM4, mv, access, name, desc);
         this.hook = hook;
-        this.description = desc;
+        isStatic = (access & Opcodes.ACC_STATIC) != 0;
+        this.methodType = Type.getMethodType(desc);
     }
 
     /**
      * Вставляет хук в байткод.
      */
-    protected final void visitHook(){
-        hook.inject(this);
+    protected final void visitHook() {
+        if (!visitingHook) {
+            visitingHook = true;
+            hook.inject(this);
+            visitingHook = false;
+        }
     }
 
-    MethodVisitor getBasicVisitor(){
+    MethodVisitor getBasicVisitor() {
         return mv;
     }
 
@@ -55,15 +64,30 @@ public abstract class HookInjector extends AdviceAdapter {
             super(mv, access, name, desc, hook);
         }
 
-        private boolean visitingHook;
-
         @Override
         protected void onMethodExit(int opcode) {
-            if(opcode != Opcodes.ATHROW && !visitingHook) {
-                visitingHook = true;
+            if (opcode != Opcodes.ATHROW) {
                 visitHook();
-                visitingHook = false;
             }
+        }
+    }
+
+    /**
+     * Вставляет хук по номеру строки.
+     */
+    public static class LineNumber extends HookInjector {
+
+        private int lineNumber;
+
+        public LineNumber(MethodVisitor mv, int access, String name, String desc, AsmHook hook, int lineNumber) {
+            super(mv, access, name, desc, hook);
+            this.lineNumber = lineNumber;
+        }
+
+        @Override
+        public void visitLineNumber(int line, Label start) {
+            super.visitLineNumber(line, start);
+            if (this.lineNumber == line) visitHook();
         }
 
     }
