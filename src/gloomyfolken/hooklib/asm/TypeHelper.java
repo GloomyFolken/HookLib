@@ -1,7 +1,5 @@
 package gloomyfolken.hooklib.asm;
 
-import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
-import cpw.mods.fml.relauncher.FMLRelaunchLog;
 import org.objectweb.asm.Type;
 
 /**

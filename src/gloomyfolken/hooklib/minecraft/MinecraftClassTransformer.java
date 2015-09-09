@@ -1,9 +1,7 @@
 package gloomyfolken.hooklib.minecraft;
 
-import cpw.mods.fml.relauncher.FMLRelaunchLog;
 import gloomyfolken.hooklib.asm.AsmHook;
 import gloomyfolken.hooklib.asm.HookClassTransformer;
-import gloomyfolken.hooklib.asm.HookContainerParser;
 import gloomyfolken.hooklib.asm.HookInjectorClassVisitor;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassWriter;
@@ -12,12 +10,9 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class MinecraftClassTransformer extends HookClassTransformer implements IClassTransformer {
 
@@ -34,7 +29,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
                 long time = System.currentTimeMillis() - timeStart;
                 logger.debug("Methods dictionary loaded in " + time + " ms");
             } catch (IOException e) {
-                logger.severe("Can not load obfuscated method names",  e);
+                logger.severe("Can not load obfuscated method names", e);
             }
         }
 
