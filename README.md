@@ -7,7 +7,7 @@
 -----------
 Чтобы запустить HookLib и пример к ней в IDE, необходимо дописать в VM arguments: 
 ```
--Dfml.coreMods.load=gloomyfolken.hooklib.asm.HookLibPlugin,gloomyfolken.hooklib.example.ExampleLoadingPlugin
+-Dfml.coreMods.load=gloomyfolken.hooklib.minecraft.HookLibPlugin,gloomyfolken.hooklib.example.ExampleHookLoader
 ```
 В IntelliJ IDEA: Run -> Edit configurations
 
@@ -18,25 +18,19 @@
 Чтобы кормод запускался из джарника, лежащего в папке mods, в джарнике должен быть файл META-INF/MANIFEST.MF с таким содержимым:
 ```
 Manifest-Version: 1.0
-FMLCorePlugin: name.of.YourLoadingPlugin
+FMLCorePlugin: name.of.YourHookLoader
 FMLCorePluginContainsFMLMod: true
 Created-By: 1.7.0 (Oracle Corporation)
 ```
 
 Пример использования
 -------------------
-
+Полный код и больше примеров есть в gloomyfolken.hooklib.example
 ```java
-AsmHook.newBuilder()
-    .setTargetClassName("net.minecraft.client.Minecraft") // модифицируем класс Minecraft
-    .setTargetMethodName("resize") // модифицируем метод resize
-    .setTargetMethodObfuscatedName("a") // указываем обфусцированное название метода
-    .appendTargetMethodParameters(Type.INT_TYPE, Type.INT_TYPE) // указываем параметры метода
-    .setHooksClassName("gloomyfolken.hooklib.example.ClientHooks") // хук-метод находится в этом классе
-    .setHookMethodName("onResize") // хук-метод называется onResize
-    .appendHookMethodParameter(Type.INT_TYPE, 1) // добавляем параметр хук-метода, передаем в него par1
-    .appendHookMethodParameter(Type.INT_TYPE, 2) // добавляем параметр хук-метода, передаем в него par2
-    .buildAndRegister(); // создаем и регистрируем хук
+@Hook(injectOnExit = true, returnCondition = ReturnCondition.ALWAYS)
+public static int getTotalArmorValue(ForgeHooks fh, EntityPlayer player, @ReturnValue int returnValue) {
+    return returnValue/2;
+}
 ```
 
 Поддержка версий Minecraft
