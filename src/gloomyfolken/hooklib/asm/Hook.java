@@ -22,6 +22,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Hook {
 
+    /**
+     * Задает условие, по которому после вызова хука будет вызван return.
+     * Если целевой метод возвращает не void, то по умолчанию будет возвращено то, что вернул хук-метод.
+     * Это можно переопредилить несколькими элементами аннотации:
+     * returnAnotherMethod, returnNull и $type$ReturnConstant.
+     */
     ReturnCondition returnCondition() default ReturnCondition.NEVER;
 
     /**
@@ -62,6 +68,13 @@ public @interface Hook {
      * 2) Может ВНЕЗАПНО сломаться (например, от того, что какой-нибудь оптифайн подменит класс целиком)
      */
     @Deprecated int injectOnLine() default -1;
+
+    /**
+     * Если указано это название, то при вызове return в целевом методе будет сначала вызван этот метод.
+     * Он должен находиться в том же классе и иметь тот же список параметров, что и хук-метод.
+     * В итоге будет возвращено значение, которое вернёт этот метод.
+     */
+    String returnAnotherMethod() default "";
 
     /**
      * Если true, то при вызове return в целевом методе будет возвращено null

@@ -4,6 +4,7 @@ import gloomyfolken.hooklib.asm.Hook;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
 import gloomyfolken.hooklib.asm.ReturnCondition;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.ForgeHooks;
 
@@ -32,5 +33,20 @@ public class AnnotationHooks {
     @Hook(returnCondition = ReturnCondition.ALWAYS, intReturnConstant = 100)
     public static void getPortalCooldown(EntityPlayer player) {
         // а делать ничего и не нужно
+    }
+
+    /**
+     * Цель: уменьшить вдвое яркость сущностей, которые выше полутора блоков.
+     * Проверка на высоту в одном методе, пересчёт яркости - в другом.
+     */
+    @Hook(injectOnExit = true, returnCondition = ReturnCondition.ON_TRUE, returnAnotherMethod = "getBrightness")
+    public static boolean getBrightnessForRender(Entity entity, float f, @ReturnValue int oldValue) {
+        return entity.height > 1.5f;
+    }
+
+    public static int getBrightness(Entity entity, float f, int oldValue) {
+        int j = ((oldValue >> 20)&15)/2;
+        int k = ((oldValue >> 4)&15)/2;
+        return j << 20 | k << 4;
     }
 }

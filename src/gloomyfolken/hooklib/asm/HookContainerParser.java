@@ -174,6 +174,9 @@ public class HookContainerParser {
                 builder.setPrimitiveConstant(primitiveConstant);
             } else if (Boolean.TRUE.equals(annotationValues.get("returnNull"))) {
                 builder.setReturnValue(gloomyfolken.hooklib.asm.ReturnValue.NULL);
+            } else if (annotationValues.containsKey("returnAnotherMethod")) {
+                builder.setReturnValue(gloomyfolken.hooklib.asm.ReturnValue.ANOTHER_METHOD_RETURN_VALUE);
+                builder.setReturnMethod((String) annotationValues.get("returnAnotherMethod"));
             } else if (methodType.getReturnType() != Type.VOID_TYPE) {
                 builder.setReturnValue(gloomyfolken.hooklib.asm.ReturnValue.HOOK_RETURN_VALUE);
             }

@@ -39,6 +39,8 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private ReturnCondition returnCondition = ReturnCondition.NEVER;
     private ReturnValue returnValue = ReturnValue.VOID;
     private Object primitiveConstant;
+    private String returnMethodName;
+    private String returnMethodDescription;
 
     private HookInjectorFactory injectorFactory = ON_ENTER_FACTORY;
     private HookPriority priority = HookPriority.NORMAL;
@@ -80,23 +82,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         // вызываем хук-метод
         int hookResultLocalId = -1;
         if (hasHookMethod()) {
-            for (int i = 0; i < hookMethodParameters.size(); i++) {
-                Type parameterType = hookMethodParameters.get(i);
-                int variableId = transmittableVariableIds.get(i);
-                if (inj.isStatic) {
-                    // если попытка передачи this из статического метода, то передаем null
-                    if (variableId == 0) {
-                        inj.visitInsn(Opcodes.ACONST_NULL);
-                        continue;
-                    }
-                    // иначе сдвигаем номер локальной переменной
-                    if (variableId > 0) variableId--;
-                }
-                if (variableId == -1) variableId = returnLocalId;
-                injectVarInsn(inj, parameterType, variableId);
-            }
-
-            inj.visitMethodInsn(INVOKESTATIC, hooksClassName.replace(".", "/"), hookMethodName, hookMethodDescription);
+            injectInvokeStatic(inj, returnLocalId, hookMethodName, hookMethodDescription);
 
             if (returnValue == ReturnValue.HOOK_RETURN_VALUE || returnCondition.requiresHookMethod) {
                 hookResultLocalId = inj.newLocal(hookMethodReturnType);
@@ -128,24 +114,12 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                 inj.visitLdcInsn(primitiveConstant);
             } else if (returnValue == ReturnValue.HOOK_RETURN_VALUE) {
                 inj.loadLocal(hookResultLocalId, hookMethodReturnType);
+            } else if (returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
+                injectInvokeStatic(inj, returnLocalId, returnMethodName, returnMethodDescription);
             }
 
             // вызываем return
-            if (targetMethodReturnType == INT_TYPE || targetMethodReturnType == SHORT_TYPE ||
-                    targetMethodReturnType == BOOLEAN_TYPE || targetMethodReturnType == BYTE_TYPE
-                    || targetMethodReturnType == CHAR_TYPE) {
-                inj.visitInsn(IRETURN);
-            } else if (targetMethodReturnType == LONG_TYPE) {
-                inj.visitInsn(LRETURN);
-            } else if (targetMethodReturnType == FLOAT_TYPE) {
-                inj.visitInsn(FRETURN);
-            } else if (targetMethodReturnType == DOUBLE_TYPE) {
-                inj.visitInsn(DRETURN);
-            } else if (targetMethodReturnType == VOID_TYPE) {
-                inj.visitInsn(RETURN);
-            } else {
-                inj.visitInsn(ARETURN);
-            }
+            injectReturn(inj, targetMethodReturnType);
 
             // вставляем label, к которому идет GOTO-переход
             if (returnCondition != ReturnCondition.ALWAYS) {
@@ -174,6 +148,44 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             opcode = ALOAD;
         }
         inj.getBasicVisitor().visitVarInsn(opcode, variableId);
+    }
+
+    private void injectReturn(HookInjector inj, Type targetMethodReturnType) {
+        if (targetMethodReturnType == INT_TYPE || targetMethodReturnType == SHORT_TYPE ||
+                targetMethodReturnType == BOOLEAN_TYPE || targetMethodReturnType == BYTE_TYPE
+                || targetMethodReturnType == CHAR_TYPE) {
+            inj.visitInsn(IRETURN);
+        } else if (targetMethodReturnType == LONG_TYPE) {
+            inj.visitInsn(LRETURN);
+        } else if (targetMethodReturnType == FLOAT_TYPE) {
+            inj.visitInsn(FRETURN);
+        } else if (targetMethodReturnType == DOUBLE_TYPE) {
+            inj.visitInsn(DRETURN);
+        } else if (targetMethodReturnType == VOID_TYPE) {
+            inj.visitInsn(RETURN);
+        } else {
+            inj.visitInsn(ARETURN);
+        }
+    }
+
+    private void injectInvokeStatic(HookInjector inj, int returnLocalId, String name, String desc) {
+        for (int i = 0; i < hookMethodParameters.size(); i++) {
+            Type parameterType = hookMethodParameters.get(i);
+            int variableId = transmittableVariableIds.get(i);
+            if (inj.isStatic) {
+                // если попытка передачи this из статического метода, то передаем null
+                if (variableId == 0) {
+                    inj.visitInsn(Opcodes.ACONST_NULL);
+                    continue;
+                }
+                // иначе сдвигаем номер локальной переменной
+                if (variableId > 0) variableId--;
+            }
+            if (variableId == -1) variableId = returnLocalId;
+            injectVarInsn(inj, parameterType, variableId);
+        }
+
+        inj.visitMethodInsn(INVOKESTATIC, hooksClassName.replace(".", "/"), name, desc);
     }
 
     @Override
@@ -584,6 +596,24 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         }
 
         /**
+         * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ, ЕСЛИ ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ УСТАНОВЛЕНО НА ANOTHER_METHOD_RETURN_VALUE ---
+         * Следует вызывать после setReturnValue(ReturnValue.ANOTHER_METHOD_RETURN_VALUE)
+         * Задает метод, результат вызова которого будет возвращён при вызове return.
+         *
+         * @param methodName название метода, результат вызова которого следует возвращать
+         * @throws IllegalStateException    если возвращаемое значение не установлено на ANOTHER_METHOD_RETURN_VALUE
+         */
+        public Builder setReturnMethod(String methodName) {
+            if (AsmHook.this.returnValue != ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
+                throw new IllegalStateException("Return value is not ANOTHER_METHOD_RETURN_VALUE, " +
+                        "so it does not make sence to specify that method.");
+            }
+
+            AsmHook.this.returnMethodName = methodName;
+            return this;
+        }
+
+        /**
          * Задает фабрику, которая создаст инжектор для этого хука.
          * Если говорить более человеческим языком, то этот метод определяет, где будет вставлен хук:
          * в начале метода, в конце или где-то ещё.
@@ -629,6 +659,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                 hook.hookMethodDescription = Type.getMethodDescriptor(hook.hookMethodReturnType,
                         hook.hookMethodParameters.toArray(new Type[0]));
             }
+            if (hook.returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
+                hook.returnMethodDescription = Type.getMethodDescriptor(hook.targetMethodReturnType,
+                        hook.hookMethodParameters.toArray(new Type[0]));
+            }
 
             try {
                 hook = (AsmHook) AsmHook.this.clone();
@@ -648,6 +682,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             if (hook.returnValue == ReturnValue.PRIMITIVE_CONSTANT && hook.primitiveConstant == null) {
                 throw new IllegalStateException("Return value is PRIMITIVE_CONSTANT, but the constant is not " +
                         "specified. Call setReturnValue() before build().");
+            }
+
+            if (hook.returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE && hook.returnMethodName == null) {
+                throw new IllegalStateException("Return value is ANOTHER_METHOD_RETURN_VALUE, but the method is not " +
+                        "specified. Call setReturnMethod() before build().");
             }
 
             return hook;
