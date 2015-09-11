@@ -17,7 +17,7 @@ public class HookContainerParser {
     private boolean currentMethodPublicStatic;
 
     /*
-    Ключ - название значения аннотации, значение - нутыпонел.
+    Ключ - название значения аннотации
      */
     private HashMap<String, Object> annotationValues;
 
@@ -46,54 +46,9 @@ public class HookContainerParser {
         ReadClassHelper.acceptVisitor(input, new HookClassVisitor());
     }
 
-    protected void visitClass(String name) {
-        this.currentClassName = name.replace('/', '.');
-    }
-
-    protected void visitMethod(String name, String desc, boolean publicAndStatic) {
-        this.currentMethodName = name;
-        this.currentMethodDesc = desc;
-        this.currentMethodPublicStatic = publicAndStatic;
-    }
-
-    protected void visitAnnotation(String desc) {
-        if (HOOK_DESC.equals(desc)) {
-            annotationValues = new HashMap<String, Object>();
-            inHookAnnotation = true;
-        }
-    }
-
-    protected void visitReturnAnnotation(int paramId) {
-        parameterAnnotations.put(paramId, -1);
-    }
-
-    protected void visitLocalAnnotation(int paramId, int localId) {
-        parameterAnnotations.put(paramId, localId);
-    }
-
     private void invalidHook(String message) {
         transformer.logger.warning("Found invalid hook " + currentClassName + "#" + currentMethodName);
         transformer.logger.warning(message);
-    }
-
-    protected void visitValue(String name, Object value) {
-        if (inHookAnnotation) {
-            annotationValues.put(name, value);
-        }
-    }
-
-    protected void visitAnnotationEnd() {
-        inHookAnnotation = false;
-    }
-
-    protected void visitMethodEnd() {
-        if (annotationValues != null) {
-            createHook();
-        }
-        parameterAnnotations.clear();
-        currentMethodName = currentMethodDesc = null;
-        currentMethodPublicStatic = false;
-        annotationValues = null;
     }
 
     private void createHook() {
@@ -214,7 +169,6 @@ public class HookContainerParser {
 
 
     private class HookClassVisitor extends ClassVisitor {
-
         public HookClassVisitor() {
             super(Opcodes.ASM4);
         }
@@ -222,14 +176,14 @@ public class HookContainerParser {
         @Override
         public void visit(int version, int access, String name, String signature,
                           String superName, String[] interfaces) {
-            HookContainerParser.this.visitClass(name);
+            currentClassName = name.replace('/', '.');
         }
 
         @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions)
-        {
-            boolean publicAndStatic = (access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) != 0;
-            HookContainerParser.this.visitMethod(name, desc, publicAndStatic);
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions)  {
+            currentMethodName = name;
+            currentMethodDesc = desc;
+            currentMethodPublicStatic = (access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) != 0;
             return new HookMethodVisitor();
         }
     }
@@ -240,32 +194,40 @@ public class HookContainerParser {
             super(Opcodes.ASM4);
         }
 
-        public AnnotationVisitor visitAnnotationDefault() {
+        @Override
+        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+            if (HOOK_DESC.equals(desc)) {
+                annotationValues = new HashMap<String, Object>();
+                inHookAnnotation = true;
+            }
             return new HookAnnotationVisitor();
         }
 
-        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            HookContainerParser.this.visitAnnotation(desc);
-            return new HookAnnotationVisitor();
-    }
-
+        @Override
         public AnnotationVisitor visitParameterAnnotation(final int parameter, String desc, boolean visible) {
             if (RETURN_DESC.equals(desc)) {
-                visitReturnAnnotation(parameter);
+                parameterAnnotations.put(parameter, -1);
             }
             if (LOCAL_DESC.equals(desc)) {
                 return new AnnotationVisitor(Opcodes.ASM4) {
                     @Override
                     public void visit(String name, Object value) {
-                        visitLocalAnnotation(parameter, (Integer) value);
+                        parameterAnnotations.put(parameter, (Integer) value);
                     }
                 };
             }
             return null;
         }
 
+        @Override
         public void visitEnd() {
-            HookContainerParser.this.visitMethodEnd();
+            if (annotationValues != null) {
+                createHook();
+            }
+            parameterAnnotations.clear();
+            currentMethodName = currentMethodDesc = null;
+            currentMethodPublicStatic = false;
+            annotationValues = null;
         }
     }
 
@@ -275,16 +237,21 @@ public class HookContainerParser {
             super(Opcodes.ASM4);
         }
 
+        @Override
         public void visit(String name, Object value) {
-            HookContainerParser.this.visitValue(name, value);
+            if (inHookAnnotation) {
+                annotationValues.put(name, value);
+            }
         }
 
+        @Override
         public void visitEnum(String name, String desc, String value) {
-            HookContainerParser.this.visitValue(name, value);
+            visit(name, value);
         }
 
+        @Override
         public void visitEnd() {
-            HookContainerParser.this.visitAnnotationEnd();
+            inHookAnnotation = false;
         }
     }
 }

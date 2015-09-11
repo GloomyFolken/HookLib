@@ -131,6 +131,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         if (hasReturnValueParameter) {
             injectVarInsn(inj, targetMethodReturnType, returnLocalId);
         }
+
     }
 
     private void injectVarInsn(HookInjector inj, Type parameterType, int variableId) {
@@ -207,8 +208,6 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         return sb.toString();
     }
 
-
-
     @Override
     public int compareTo(AsmHook o) {
         if (injectorFactory.isPriorityInverted && o.injectorFactory.isPriorityInverted) {
@@ -234,11 +233,8 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ ---
          * Определяет название класса, в который необходимо установить хук.
          *
-         * @param className Необфусцированное название класса с указанием пакета, разделенное точками.
-         *                  Обфусцированное название указывать не нужно.
+         * @param className Название класса с указанием пакета, разделенное точками.
          *                  Например: net.minecraft.world.World
-         *                  Не используйте конструкцию вида World.class.getName(), указывайте строку самостоятельно.
-         *                  Обращение World.class во время загрузки класса World вызовет ClassCircularityError.
          */
         public Builder setTargetClass(String className) {
             AsmHook.this.targetClassName = className;
@@ -248,12 +244,9 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         /**
          * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ ---
          * Определяет название метода, в который необходимо вставить хук.
-         * Если этот метод находится в пакете net.minecraft (и, соответственно, его название обфусцируется),
-         * то нужно вызвать ещё и setTargetMethodObfuscatedName().
-         * Если нужно пропатчить конструктор, то в названии метода нужно указать <init>, а обфусцированное название
-         * указывать не нужно.
+         * Если нужно пропатчить конструктор, то в названии метода нужно указать <init>.
          *
-         * @param methodName Необфусцированное название метода.
+         * @param methodName Название метода.
          *                   Например: getBlockId
          */
         public Builder setTargetMethod(String methodName) {
@@ -327,7 +320,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         }
 
         /**
-         * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ, ЕСЛИ НЕ ЗАДАНО defaultHooksClassName ---
+         * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ, ЕСЛИ НУЖЕН ХУК-МЕТОД, А НЕ ПРОСТО return SOME_CONSTANT ---
          * Определяет название класса, в котором находится хук-метод.
          *
          * @param className Название класса с указанием пакета, разделенное точками.

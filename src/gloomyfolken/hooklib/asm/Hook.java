@@ -26,7 +26,7 @@ public @interface Hook {
      * Задает условие, по которому после вызова хука будет вызван return.
      * Если целевой метод возвращает не void, то по умолчанию будет возвращено то, что вернул хук-метод.
      * Это можно переопредилить несколькими элементами аннотации:
-     * returnAnotherMethod, returnNull и $type$ReturnConstant.
+     * returnAnotherMethod, returnNull и %type%ReturnConstant.
      */
     ReturnCondition returnCondition() default ReturnCondition.NEVER;
 
@@ -51,6 +51,7 @@ public @interface Hook {
      * могут встретиться (например, это можно сделать при обфускации через ProGuard)
      * Если возвращаемый тип не указан, то хук применяется к первому методу, подходящему
      * по названию и списку параметров.
+     * Указывать нужно полное название класса: java.lang.String, void, int и т.д.
      */
     String returnType() default "";
 

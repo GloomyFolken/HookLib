@@ -38,15 +38,22 @@ public class HookClassTransformer {
         List<AsmHook> hooks = hooksMap.get(className);
 
         if (hooks != null){
-            Collections.sort(hooks);
             try {
+                Collections.sort(hooks);
                 logger.debug("Injecting hooks into class " + className);
                 int numHooks = hooks.size();
+
+                /*
+                 Начиная с седьмой версии джавы, сильно изменился процесс верификации байткода.
+                 Ради этого приходится включать автоматическую генерацию stack map frame'ов.
+                 На более старых версиях байткода это лишняя трата времени.
+                 Подробнее здесь: http://stackoverflow.com/questions/25109942
+                */
                 int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
                 boolean java7 = majorVersion > 50;
 
                 ClassReader cr = new ClassReader(bytecode);
-                ClassWriter cw = new ClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : 0);
+                ClassWriter cw = new ClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
                 HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
                 cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 

@@ -25,6 +25,7 @@ public class HookInjectorClassVisitor extends ClassVisitor {
         while (it.hasNext()) {
             AsmHook hook = it.next();
             if (isTargetMethod(hook, name, desc)){
+                // добавляет MethodVisitor в цепочку
                 mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook);
                 it.remove();
             }
