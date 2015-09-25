@@ -11,6 +11,7 @@ import java.util.List;
 public class HookInjectorClassVisitor extends ClassVisitor {
 
     List<AsmHook> hooks;
+    boolean visitingHook;
 
     public HookInjectorClassVisitor(ClassWriter cv, List<AsmHook> hooks) {
         super(Opcodes.ASM4, cv);
@@ -24,9 +25,9 @@ public class HookInjectorClassVisitor extends ClassVisitor {
         Iterator<AsmHook> it = hooks.iterator();
         while (it.hasNext()) {
             AsmHook hook = it.next();
-            if (isTargetMethod(hook, name, desc)){
+            if (isTargetMethod(hook, name, desc)) {
                 // добавляет MethodVisitor в цепочку
-                mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook);
+                mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook, this);
                 it.remove();
             }
         }

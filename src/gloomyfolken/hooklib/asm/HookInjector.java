@@ -13,13 +13,15 @@ import org.objectweb.asm.commons.AdviceAdapter;
 public abstract class HookInjector extends AdviceAdapter {
 
     protected final AsmHook hook;
+    protected final HookInjectorClassVisitor cv;
     public final Type methodType;
     public final boolean isStatic;
-    protected static boolean visitingHook;
 
-    protected HookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
+    protected HookInjector(MethodVisitor mv, int access, String name, String desc,
+                           AsmHook hook, HookInjectorClassVisitor cv) {
         super(Opcodes.ASM4, mv, access, name, desc);
         this.hook = hook;
+        this.cv = cv;
         isStatic = (access & Opcodes.ACC_STATIC) != 0;
         this.methodType = Type.getMethodType(desc);
     }
@@ -28,10 +30,10 @@ public abstract class HookInjector extends AdviceAdapter {
      * Вставляет хук в байткод.
      */
     protected final void visitHook() {
-        if (!visitingHook) {
-            visitingHook = true;
+        if (!cv.visitingHook) {
+            cv.visitingHook = true;
             hook.inject(this);
-            visitingHook = false;
+            cv.visitingHook = false;
         }
     }
 
@@ -44,8 +46,9 @@ public abstract class HookInjector extends AdviceAdapter {
      */
     public static class MethodEnter extends HookInjector {
 
-        public MethodEnter(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
-            super(mv, access, name, desc, hook);
+        public MethodEnter(MethodVisitor mv, int access, String name, String desc,
+                           AsmHook hook, HookInjectorClassVisitor cv) {
+            super(mv, access, name, desc, hook, cv);
         }
 
         @Override
@@ -60,8 +63,9 @@ public abstract class HookInjector extends AdviceAdapter {
      */
     public static class MethodExit extends HookInjector {
 
-        public MethodExit(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
-            super(mv, access, name, desc, hook);
+        public MethodExit(MethodVisitor mv, int access, String name, String desc,
+                          AsmHook hook, HookInjectorClassVisitor cv) {
+            super(mv, access, name, desc, hook, cv);
         }
 
         @Override
@@ -79,8 +83,9 @@ public abstract class HookInjector extends AdviceAdapter {
 
         private int lineNumber;
 
-        public LineNumber(MethodVisitor mv, int access, String name, String desc, AsmHook hook, int lineNumber) {
-            super(mv, access, name, desc, hook);
+        public LineNumber(MethodVisitor mv, int access, String name, String desc,
+                          AsmHook hook, HookInjectorClassVisitor cv, int lineNumber) {
+            super(mv, access, name, desc, hook, cv);
             this.lineNumber = lineNumber;
         }
 

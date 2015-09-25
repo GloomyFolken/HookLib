@@ -63,15 +63,17 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
             protected boolean isTargetMethod(AsmHook hook, String name, String desc) {
                 if (HookLibPlugin.getObfuscated() && name.startsWith("func_")) {
                     int first = name.indexOf('_');
-                    int second = name.indexOf('_', first+1);
-                    int methodId = Integer.valueOf(name.substring(first+1, second));
+                    int second = name.indexOf('_', first + 1);
+                    int methodId = Integer.valueOf(name.substring(first + 1, second));
                     String mcpName = methodNames.get(methodId);
                     if (mcpName != null && super.isTargetMethod(hook, mcpName, desc)) {
                         return true;
                     }
                 }
                 return super.isTargetMethod(hook, name, desc);
-            };
+            }
+
+            ;
         };
     }
 }

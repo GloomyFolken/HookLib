@@ -39,8 +39,6 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private ReturnCondition returnCondition = ReturnCondition.NEVER;
     private ReturnValue returnValue = ReturnValue.VOID;
     private Object primitiveConstant;
-    private String returnMethodName;
-    private String returnMethodDescription;
 
     private HookInjectorFactory injectorFactory = ON_ENTER_FACTORY;
     private HookPriority priority = HookPriority.NORMAL;
@@ -51,6 +49,9 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     // может быть без возвращаемого типа
     private String targetMethodDescription;
     private String hookMethodDescription;
+    private String returnMethodName;
+    // может быть без возвращаемого типа
+    private String returnMethodDescription;
 
     protected String getTargetClassName() {
         return targetClassName;
@@ -115,6 +116,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             } else if (returnValue == ReturnValue.HOOK_RETURN_VALUE) {
                 inj.loadLocal(hookResultLocalId, hookMethodReturnType);
             } else if (returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
+                String returnMethodDescription = this.returnMethodDescription;
+                // если не был определён заранее нужный возвращаемый тип, то добавляем его к описанию
+                if (returnMethodDescription.endsWith(")")) {
+                    returnMethodDescription += targetMethodReturnType.getDescriptor();
+                }
                 injectInvokeStatic(inj, returnLocalId, returnMethodName, returnMethodDescription);
             }
 
@@ -370,7 +376,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * float f1 = ...;
          * //...
          * В таком случае у f будет номер 7, а у f1 - 8.
-         *
+         * <p/>
          * Если целевой метод static, то не нужно начинать отсчет локальных переменных с нуля, номера
          * будут смещены автоматически.
          *
@@ -545,6 +551,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
         /**
          * Напрямую указывает тип, возвращаемый хук-методом.
+         *
          * @param type
          */
         protected void setHookMethodReturnType(Type type) {
@@ -594,7 +601,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * Задает метод, результат вызова которого будет возвращён при вызове return.
          *
          * @param methodName название метода, результат вызова которого следует возвращать
-         * @throws IllegalStateException    если возвращаемое значение не установлено на ANOTHER_METHOD_RETURN_VALUE
+         * @throws IllegalStateException если возвращаемое значение не установлено на ANOTHER_METHOD_RETURN_VALUE
          */
         public Builder setReturnMethod(String methodName) {
             if (AsmHook.this.returnValue != ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
@@ -630,6 +637,16 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             return this;
         }
 
+        private String getMethodDesc(Type returnType, List<Type> paramTypes) {
+            Type[] paramTypesArray = paramTypes.toArray(new Type[0]);
+            if (returnType == null) {
+                String voidDesc = Type.getMethodDescriptor(Type.VOID_TYPE, paramTypesArray);
+                return voidDesc.substring(0, voidDesc.length() - 1);
+            } else {
+                return Type.getMethodDescriptor(returnType, paramTypesArray);
+            }
+        }
+
         /**
          * Создает хук по заданным параметрам.
          *
@@ -639,22 +656,14 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         public AsmHook build() {
             AsmHook hook = AsmHook.this;
 
-            if (hook.targetMethodReturnType == null) {
-                String voidDesc = Type.getMethodDescriptor(Type.VOID_TYPE,
-                        hook.targetMethodParameters.toArray(new Type[0]));
-                hook.targetMethodDescription = voidDesc.substring(0, voidDesc.length() - 1);
-            } else {
-                hook.targetMethodDescription = Type.getMethodDescriptor(hook.targetMethodReturnType,
-                        hook.targetMethodParameters.toArray(new Type[0]));
-            }
+            hook.targetMethodDescription = getMethodDesc(targetMethodReturnType, hook.targetMethodParameters);
 
             if (hook.hasHookMethod()) {
                 hook.hookMethodDescription = Type.getMethodDescriptor(hook.hookMethodReturnType,
                         hook.hookMethodParameters.toArray(new Type[0]));
             }
             if (hook.returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
-                hook.returnMethodDescription = Type.getMethodDescriptor(hook.targetMethodReturnType,
-                        hook.hookMethodParameters.toArray(new Type[0]));
+                hook.returnMethodDescription = getMethodDesc(hook.targetMethodReturnType, hook.hookMethodParameters);
             }
 
             try {

@@ -16,18 +16,20 @@ public abstract class HookInjectorFactory {
      */
     protected boolean isPriorityInverted = false;
 
-    abstract HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook);
+    abstract HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc,
+                                             AsmHook hook, HookInjectorClassVisitor cv);
 
 
     static class MethodEnter extends HookInjectorFactory {
 
         public static final MethodEnter INSTANCE = new MethodEnter();
 
-        private MethodEnter(){}
+        private MethodEnter() {}
 
         @Override
-        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
-            return new HookInjector.MethodEnter(mv, access, name, desc, hook);
+        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc,
+                                               AsmHook hook, HookInjectorClassVisitor cv) {
+            return new HookInjector.MethodEnter(mv, access, name, desc, hook, cv);
         }
 
     }
@@ -36,13 +38,14 @@ public abstract class HookInjectorFactory {
 
         public static final MethodExit INSTANCE = new MethodExit();
 
-        private MethodExit(){
+        private MethodExit() {
             isPriorityInverted = true;
         }
 
         @Override
-        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
-            return new HookInjector.MethodExit(mv, access, name, desc, hook);
+        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc,
+                                               AsmHook hook, HookInjectorClassVisitor cv) {
+            return new HookInjector.MethodExit(mv, access, name, desc, hook, cv);
         }
     }
 
@@ -50,13 +53,14 @@ public abstract class HookInjectorFactory {
 
         private int lineNumber;
 
-        public LineNumber(int lineNumber){
+        public LineNumber(int lineNumber) {
             this.lineNumber = lineNumber;
         }
 
         @Override
-        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc, AsmHook hook) {
-            return new HookInjector.LineNumber(mv, access, name, desc, hook, lineNumber);
+        public HookInjector createHookInjector(MethodVisitor mv, int access, String name, String desc,
+                                               AsmHook hook, HookInjectorClassVisitor cv) {
+            return new HookInjector.LineNumber(mv, access, name, desc, hook, cv, lineNumber);
         }
     }
 

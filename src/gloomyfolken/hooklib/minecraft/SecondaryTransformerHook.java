@@ -11,7 +11,7 @@ public class SecondaryTransformerHook {
      */
     @Hook
     public static void injectData(Loader loader, Object... data) {
-        LaunchClassLoader classLoader = (LaunchClassLoader)SecondaryTransformerHook.class.getClassLoader();
+        LaunchClassLoader classLoader = (LaunchClassLoader) SecondaryTransformerHook.class.getClassLoader();
         classLoader.registerTransformer(MinecraftClassTransformer.class.getName());
     }
 

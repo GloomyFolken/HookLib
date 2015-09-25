@@ -12,7 +12,7 @@ public class ReadClassHelper {
         return ReadClassHelper.class.getResourceAsStream(classResourceName);
     }
 
-    public static void acceptVisitor(InputStream classData, ClassVisitor visitor){
+    public static void acceptVisitor(InputStream classData, ClassVisitor visitor) {
         try {
             ClassReader reader = new ClassReader(classData);
             reader.accept(visitor, 0);

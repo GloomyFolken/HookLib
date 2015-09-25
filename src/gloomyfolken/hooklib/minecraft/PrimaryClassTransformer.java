@@ -60,23 +60,23 @@ public class PrimaryClassTransformer extends HookClassTransformer implements ICl
         return Type.getMethodDescriptor(mappedReturnType, mappedArgTypes);
     }
 
-    static Type map(Type type){
+    static Type map(Type type) {
         if (!HookLibPlugin.getObfuscated()) return type;
 
         // void or primitive
         if (type.getSort() < 9) return type;
 
         //array
-        if (type.getSort() == 9){
+        if (type.getSort() == 9) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < type.getDimensions(); i++){
+            for (int i = 0; i < type.getDimensions(); i++) {
                 sb.append("[");
             }
             sb.append("L");
             sb.append(map(type.getElementType()).getInternalName());
             sb.append(";");
             return Type.getType(sb.toString());
-        } else if (type.getSort() == 10){
+        } else if (type.getSort() == 10) {
             String unmappedName = FMLDeobfuscatingRemapper.INSTANCE.map(type.getInternalName());
             return Type.getType("L" + unmappedName + ";");
         } else {

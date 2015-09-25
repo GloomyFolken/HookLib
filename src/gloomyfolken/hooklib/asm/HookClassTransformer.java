@@ -16,8 +16,8 @@ public class HookClassTransformer {
     protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
     private HookContainerParser containerParser = new HookContainerParser(this);
 
-    public void registerHook(AsmHook hook){
-        if (hooksMap.containsKey(hook.getTargetClassName())){
+    public void registerHook(AsmHook hook) {
+        if (hooksMap.containsKey(hook.getTargetClassName())) {
             hooksMap.get(hook.getTargetClassName()).add(hook);
         } else {
             List<AsmHook> list = new ArrayList<AsmHook>(2);
@@ -37,7 +37,7 @@ public class HookClassTransformer {
     public byte[] transform(String className, byte[] bytecode) {
         List<AsmHook> hooks = hooksMap.get(className);
 
-        if (hooks != null){
+        if (hooks != null) {
             try {
                 Collections.sort(hooks);
                 logger.debug("Injecting hooks into class " + className);
@@ -49,7 +49,7 @@ public class HookClassTransformer {
                  На более старых версиях байткода это лишняя трата времени.
                  Подробнее здесь: http://stackoverflow.com/questions/25109942
                 */
-                int majorVersion =  ((bytecode[6]&0xFF)<<8) | (bytecode[7]&0xFF);
+                int majorVersion = ((bytecode[6] & 0xFF) << 8) | (bytecode[7] & 0xFF);
                 boolean java7 = majorVersion > 50;
 
                 ClassReader cr = new ClassReader(bytecode);
@@ -59,12 +59,12 @@ public class HookClassTransformer {
 
                 int numInjectedHooks = numHooks - hooksWriter.hooks.size();
                 logger.debug("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
-                for (AsmHook notInjected : hooksWriter.hooks){
+                for (AsmHook notInjected : hooksWriter.hooks) {
                     logger.warning("Can not found target method of hook " + notInjected);
                 }
 
                 return cw.toByteArray();
-            } catch (Exception e){
+            } catch (Exception e) {
                 logger.severe("A problem has occured during transformation of class " + className + ".");
                 logger.severe("Attached hooks:");
                 for (AsmHook hook : hooks) {

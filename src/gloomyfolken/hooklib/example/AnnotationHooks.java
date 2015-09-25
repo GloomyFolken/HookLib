@@ -14,8 +14,8 @@ public class AnnotationHooks {
      * Цель: при каждом ресайзе окна выводить в консоль новый размер
      */
     @Hook
-    public static void resize(Minecraft mc, int x, int y){
-        System.out.println("ResizePRE1, x=" + x + ", y=" + y);
+    public static void resize(Minecraft mc, int x, int y) {
+        System.out.println("Resize, x=" + x + ", y=" + y);
     }
 
     /**
@@ -24,15 +24,15 @@ public class AnnotationHooks {
      */
     @Hook(injectOnExit = true, returnCondition = ReturnCondition.ALWAYS)
     public static int getTotalArmorValue(ForgeHooks fh, EntityPlayer player, @ReturnValue int returnValue) {
-        return returnValue/2;
+        return returnValue / 2;
     }
 
     /**
      * Цель: запретить возможность телепортироваться в ад и обратно чаще, чем раз в пять секунд.
      */
-    @Hook(returnCondition = ReturnCondition.ALWAYS, intReturnConstant = 100)
-    public static void getPortalCooldown(EntityPlayer player) {
-        // а делать ничего и не нужно
+    @Hook(returnCondition = ReturnCondition.ON_TRUE, intReturnConstant = 100)
+    public static boolean getPortalCooldown(EntityPlayer player) {
+        return player.dimension == 0;
     }
 
     /**
@@ -40,13 +40,14 @@ public class AnnotationHooks {
      * Проверка на высоту в одном методе, пересчёт яркости - в другом.
      */
     @Hook(injectOnExit = true, returnCondition = ReturnCondition.ON_TRUE, returnAnotherMethod = "getBrightness")
-    public static boolean getBrightnessForRender(Entity entity, float f, @ReturnValue int oldValue) {
+    public static boolean getBrightnessForRender(Entity entity, float f) {
         return entity.height > 1.5f;
     }
 
-    public static int getBrightness(Entity entity, float f, int oldValue) {
-        int j = ((oldValue >> 20)&15)/2;
-        int k = ((oldValue >> 4)&15)/2;
+    public static int getBrightness(Entity entity, float f) {
+        int oldValue = 0;
+        int j = ((oldValue >> 20) & 15) / 2;
+        int k = ((oldValue >> 4) & 15) / 2;
         return j << 20 | k << 4;
     }
 }

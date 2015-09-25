@@ -11,7 +11,7 @@ public class VariableIdHelper {
     public static List<String> listLocalVariables(InputStream classData, final String methodName, Type... argTypes) {
         final List<String> localVariables = new ArrayList<String>();
         String methodDesc = Type.getMethodDescriptor(Type.VOID_TYPE, argTypes);
-        final String methodDescWithoutReturnType = methodDesc.substring(0, methodDesc.length()-1);
+        final String methodDescWithoutReturnType = methodDesc.substring(0, methodDesc.length() - 1);
 
         ClassVisitor cv = new ClassVisitor(Opcodes.ASM4) {
 

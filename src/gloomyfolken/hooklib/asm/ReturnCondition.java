@@ -36,7 +36,7 @@ public enum ReturnCondition {
 
     public final boolean requiresHookMethod;
 
-    ReturnCondition(boolean requiresHookMethod){
+    ReturnCondition(boolean requiresHookMethod) {
         this.requiresHookMethod = requiresHookMethod;
     }
 
