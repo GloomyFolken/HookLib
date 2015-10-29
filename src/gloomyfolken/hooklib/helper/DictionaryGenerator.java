@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Генерирует из mcp-шного methods.csv словарь с названиями методов для хуклибы.
+ * Р“РµРЅРµСЂРёСЂСѓРµС‚ РёР· mcp-С€РЅРѕРіРѕ methods.csv СЃР»РѕРІР°СЂСЊ СЃ РЅР°Р·РІР°РЅРёСЏРјРё РјРµС‚РѕРґРѕРІ РґР»СЏ С…СѓРєР»РёР±С‹.
  */
 public class DictionaryGenerator {
 
