@@ -13,13 +13,13 @@ public class VariableIdHelper {
         String methodDesc = Type.getMethodDescriptor(Type.VOID_TYPE, argTypes);
         final String methodDescWithoutReturnType = methodDesc.substring(0, methodDesc.length() - 1);
 
-        ClassVisitor cv = new ClassVisitor(Opcodes.ASM4) {
+        ClassVisitor cv = new ClassVisitor(Opcodes.ASM5) {
 
             @Override
             public MethodVisitor visitMethod(final int acc, String name, String desc,
                                              String signature, String[] exceptions) {
                 if (methodName.equals(name) && desc.startsWith(methodDescWithoutReturnType)) {
-                    return new MethodVisitor(Opcodes.ASM4) {
+                    return new MethodVisitor(Opcodes.ASM5) {
                         @Override
                         public void visitLocalVariable(String name, String desc,
                                                        String signature, Label start, Label end, int index) {

@@ -1,5 +1,6 @@
 package gloomyfolken.hooklib.asm;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.HashMap;
@@ -70,4 +71,20 @@ public class TypeHelper {
         return Type.getType(sb.toString());
     }
 
+    static Object getStackMapFrameEntry(Type type) {
+        if (type == Type.BOOLEAN_TYPE || type == Type.BYTE_TYPE || type == Type.SHORT_TYPE ||
+                type == Type.CHAR_TYPE || type == Type.INT_TYPE) {
+            return Opcodes.INTEGER;
+        }
+        if (type == Type.FLOAT_TYPE) {
+            return Opcodes.FLOAT;
+        }
+        if (type == Type.DOUBLE_TYPE) {
+            return Opcodes.DOUBLE;
+        }
+        if (type == Type.LONG_TYPE) {
+            return Opcodes.LONG;
+        }
+        return type.getInternalName();
+    }
 }

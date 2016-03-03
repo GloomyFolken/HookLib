@@ -70,7 +70,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         return hookMethodName != null && hooksClassName != null;
     }
 
-    protected void inject(HookInjector inj) {
+    protected void inject(HookInjectorMethodVisitor inj) {
         Type targetMethodReturnType = inj.methodType.getReturnType();
 
         // сохраняем значение, которое было передано return в локальную переменную
@@ -85,7 +85,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         if (hasHookMethod()) {
             injectInvokeStatic(inj, returnLocalId, hookMethodName, hookMethodDescription);
 
-            if (returnValue == ReturnValue.HOOK_RETURN_VALUE || returnCondition.requiresHookMethod) {
+            if (returnValue == ReturnValue.HOOK_RETURN_VALUE || returnCondition.requiresCondition) {
                 hookResultLocalId = inj.newLocal(hookMethodReturnType);
                 inj.storeLocal(hookResultLocalId, hookMethodReturnType);
             }
@@ -94,7 +94,6 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         // вызываем return
         if (returnCondition != ReturnCondition.NEVER) {
             Label label = inj.newLabel();
-
 
             // вставляем GOTO-переход к label'у после вызова return
             if (returnCondition != ReturnCondition.ALWAYS) {
@@ -128,19 +127,16 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             injectReturn(inj, targetMethodReturnType);
 
             // вставляем label, к которому идет GOTO-переход
-            if (returnCondition != ReturnCondition.ALWAYS) {
-                inj.visitLabel(label); // собственно label
-            }
+            inj.visitLabel(label);
         }
 
         //кладем в стек значение, которое шло в return
         if (hasReturnValueParameter) {
             injectVarInsn(inj, targetMethodReturnType, returnLocalId);
         }
-
     }
 
-    private void injectVarInsn(HookInjector inj, Type parameterType, int variableId) {
+    private void injectVarInsn(HookInjectorMethodVisitor inj, Type parameterType, int variableId) {
         int opcode;
         if (parameterType == INT_TYPE || parameterType == BYTE_TYPE || parameterType == CHAR_TYPE ||
                 parameterType == BOOLEAN_TYPE || parameterType == SHORT_TYPE) {
@@ -157,7 +153,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         inj.getBasicVisitor().visitVarInsn(opcode, variableId);
     }
 
-    private void injectReturn(HookInjector inj, Type targetMethodReturnType) {
+    private void injectReturn(HookInjectorMethodVisitor inj, Type targetMethodReturnType) {
         if (targetMethodReturnType == INT_TYPE || targetMethodReturnType == SHORT_TYPE ||
                 targetMethodReturnType == BOOLEAN_TYPE || targetMethodReturnType == BYTE_TYPE
                 || targetMethodReturnType == CHAR_TYPE) {
@@ -175,7 +171,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         }
     }
 
-    private void injectInvokeStatic(HookInjector inj, int returnLocalId, String name, String desc) {
+    private void injectInvokeStatic(HookInjectorMethodVisitor inj, int returnLocalId, String name, String desc) {
         for (int i = 0; i < hookMethodParameters.size(); i++) {
             Type parameterType = hookMethodParameters.get(i);
             int variableId = transmittableVariableIds.get(i);
@@ -468,7 +464,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * @see ReturnCondition
          */
         public Builder setReturnCondition(ReturnCondition condition) {
-            if (condition.requiresHookMethod && AsmHook.this.hookMethodName == null) {
+            if (condition.requiresCondition && AsmHook.this.hookMethodName == null) {
                 throw new IllegalArgumentException("Hook method is not specified, so can not use return " +
                         "condition that depends on hook method.");
             }
@@ -689,6 +685,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             if (hook.returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE && hook.returnMethodName == null) {
                 throw new IllegalStateException("Return value is ANOTHER_METHOD_RETURN_VALUE, but the method is not " +
                         "specified. Call setReturnMethod() before build().");
+            }
+
+            if (!(hook.injectorFactory instanceof MethodExit) && hook.hasReturnValueParameter) {
+                throw new IllegalStateException("Can not pass return value to hook method " +
+                        "because hook location is not return insn.");
             }
 
             return hook;

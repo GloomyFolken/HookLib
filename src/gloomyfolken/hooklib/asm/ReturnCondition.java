@@ -34,10 +34,10 @@ public enum ReturnCondition {
      */
     ON_NOT_NULL(true);
 
-    public final boolean requiresHookMethod;
+    public final boolean requiresCondition;
 
-    ReturnCondition(boolean requiresHookMethod) {
-        this.requiresHookMethod = requiresHookMethod;
+    ReturnCondition(boolean requiresCondition) {
+        this.requiresCondition = requiresCondition;
     }
 
 }

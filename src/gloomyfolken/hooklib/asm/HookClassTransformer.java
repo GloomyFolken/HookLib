@@ -53,12 +53,13 @@ public class HookClassTransformer {
                 boolean java7 = majorVersion > 50;
 
                 ClassReader cr = new ClassReader(bytecode);
-                ClassWriter cw = new ClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
+                ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
                 HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
                 cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 
                 int numInjectedHooks = numHooks - hooksWriter.hooks.size();
-                logger.debug("Successfully injected " + numInjectedHooks + " hook" + (numInjectedHooks == 1 ? "" : "s"));
+                logger.debug("Successfully injected " + numInjectedHooks + " hook" +
+                        (numInjectedHooks == 1 ? "" : "s") + " to " + className);
                 for (AsmHook notInjected : hooksWriter.hooks) {
                     logger.warning("Can not found target method of hook " + notInjected);
                 }
@@ -76,8 +77,28 @@ public class HookClassTransformer {
         return bytecode;
     }
 
+    /**
+     * Создает ClassVisitor для списка хуков.
+     * Метод можно переопределить, если в ClassVisitor'e нужна своя логика для проверки,
+     * является ли метод целевым (isTargetMethod())
+     * @param cw ClassWriter, который должен стоять в цепочке после этого ClassVisitor'a
+     * @param hooks Список хуков, вставляемых в класс
+     * @return ClassVisitor, добавляющий хуки
+     */
     protected HookInjectorClassVisitor createInjectorClassVisitor(ClassWriter cw, List<AsmHook> hooks) {
         return new HookInjectorClassVisitor(cw, hooks);
     }
 
+    /**
+     * Создает ClassWriter для сохранения трансформированного класса.
+     * Метод можно переопределить, если в ClassWriter'e нужна своя реализация метода getCommonSuperClass().
+     * Стандартная реализация работает для уже загруженных классов и для классов, .class файлы которых есть
+     * в classpath, но они ещё не загружены. Во втором случае происходит загрузка (но не инициализация) классов.
+     * Если загрузка классов является проблемой, то можно воспользоваться SafeClassWriter.
+     * @param flags Список флагов, которые нужно передать в конструктор ClassWriter'a
+     * @return ClassWriter, сохраняющий трансформированный класс
+     */
+    protected ClassWriter createClassWriter(int flags) {
+        return new SafeClassWriter(flags);
+    }
 }

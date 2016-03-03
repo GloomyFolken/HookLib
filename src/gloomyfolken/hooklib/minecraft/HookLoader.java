@@ -12,6 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+/**
+ * Удобная базовая реализация IFMLLoadingPlugin для использования HookLib.
+ * Регистрировать хуки и контейнеры нужно в registerHooks().
+ */
 public abstract class HookLoader implements IFMLLoadingPlugin {
 
     private static DeobfuscationTransformer deobfuscationTransformer;

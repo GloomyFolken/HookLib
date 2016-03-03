@@ -14,7 +14,7 @@ public class HookInjectorClassVisitor extends ClassVisitor {
     boolean visitingHook;
 
     public HookInjectorClassVisitor(ClassWriter cv, List<AsmHook> hooks) {
-        super(Opcodes.ASM4, cv);
+        super(Opcodes.ASM5, cv);
         this.hooks = hooks;
     }
 
