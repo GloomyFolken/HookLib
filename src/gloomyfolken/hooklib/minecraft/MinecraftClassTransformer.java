@@ -10,14 +10,21 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Этот трансформер занимается вставкой хуков с момента запуска майнкрафта. Здесь сосредоточены все костыли,
+ * которые необходимы для правильной работы с обфусцированными названиями методов.
+ */
 public class MinecraftClassTransformer extends HookClassTransformer implements IClassTransformer {
 
     static MinecraftClassTransformer instance;
     private Map<Integer, String> methodNames;
+
+    private static List<IClassTransformer> postTransformers = new ArrayList<>();
 
     public MinecraftClassTransformer() {
         instance = this;
@@ -32,6 +39,8 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
                 logger.severe("Can not load obfuscated method names", e);
             }
         }
+
+        this.classMetadataReader = HookLoader.getDeobfuscationMetadataReader();
 
         this.hooksMap.putAll(PrimaryClassTransformer.instance.getHooksMap());
         PrimaryClassTransformer.instance.getHooksMap().clear();
@@ -53,27 +62,47 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 
     @Override
     public byte[] transform(String oldName, String newName, byte[] bytecode) {
-        return transform(newName, bytecode);
+        bytecode = transform(newName, bytecode);
+        for (int i = 0; i < postTransformers.size(); i++) {
+            bytecode = postTransformers.get(i).transform(oldName, newName, bytecode);
+        }
+        return bytecode;
     }
 
     @Override
     protected HookInjectorClassVisitor createInjectorClassVisitor(ClassWriter cw, List<AsmHook> hooks) {
-        return new HookInjectorClassVisitor(cw, hooks) {
+        return new HookInjectorClassVisitor(this, cw, hooks) {
             @Override
             protected boolean isTargetMethod(AsmHook hook, String name, String desc) {
-                if (HookLibPlugin.getObfuscated() && name.startsWith("func_")) {
-                    int first = name.indexOf('_');
-                    int second = name.indexOf('_', first + 1);
-                    int methodId = Integer.valueOf(name.substring(first + 1, second));
-                    String mcpName = methodNames.get(methodId);
+                if (HookLibPlugin.getObfuscated()) {
+                    String mcpName = methodNames.get(getMethodId(name));
                     if (mcpName != null && super.isTargetMethod(hook, mcpName, desc)) {
                         return true;
                     }
                 }
                 return super.isTargetMethod(hook, name, desc);
             }
-
-            ;
         };
+    }
+
+    public Map<Integer, String> getMethodNames() {
+        return methodNames;
+    }
+
+    public static int getMethodId(String srgName) {
+        if (srgName.startsWith("func_")) {
+            int first = srgName.indexOf('_');
+            int second = srgName.indexOf('_', first + 1);
+            return Integer.valueOf(srgName.substring(first + 1, second));
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Регистрирует трансформер, который будет запущен после обычных, и в том числе после деобфусцирующего трансформера.
+     */
+    public static void registerPostTransformer(IClassTransformer transformer) {
+        postTransformers.add(transformer);
     }
 }

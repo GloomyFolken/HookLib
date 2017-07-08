@@ -4,7 +4,6 @@ import gloomyfolken.hooklib.asm.HookLogger.SystemOutLogger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +14,7 @@ public class HookClassTransformer {
     public HookLogger logger = new SystemOutLogger();
     protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
     private HookContainerParser containerParser = new HookContainerParser(this);
+    protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();
 
     public void registerHook(AsmHook hook) {
         if (hooksMap.containsKey(hook.getTargetClassName())) {
@@ -30,7 +30,7 @@ public class HookClassTransformer {
         containerParser.parseHooks(className);
     }
 
-    public void registerHookContainer(InputStream classData) {
+    public void registerHookContainer(byte[] classData) {
         containerParser.parseHooks(classData);
     }
 
@@ -86,7 +86,7 @@ public class HookClassTransformer {
      * @return ClassVisitor, добавляющий хуки
      */
     protected HookInjectorClassVisitor createInjectorClassVisitor(ClassWriter cw, List<AsmHook> hooks) {
-        return new HookInjectorClassVisitor(cw, hooks);
+        return new HookInjectorClassVisitor(this, cw, hooks);
     }
 
     /**
@@ -99,6 +99,6 @@ public class HookClassTransformer {
      * @return ClassWriter, сохраняющий трансформированный класс
      */
     protected ClassWriter createClassWriter(int flags) {
-        return new SafeClassWriter(flags);
+        return new SafeClassWriter(classMetadataReader, flags);
     }
 }

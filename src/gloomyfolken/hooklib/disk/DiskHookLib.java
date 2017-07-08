@@ -1,6 +1,7 @@
 package gloomyfolken.hooklib.disk;
 
 import gloomyfolken.hooklib.asm.HookClassTransformer;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -22,7 +23,7 @@ public class DiskHookLib {
     void process() throws IOException {
         HookClassTransformer transformer = new HookClassTransformer();
         for (File file : getFiles(".class", hooksDir)) {
-            transformer.registerHookContainer(new FileInputStream(file));
+            transformer.registerHookContainer(FileUtils.readFileToByteArray(file));
             // теперь file надо скопировать в transformedDir, сохранив путь
         }
         for (File file : getFiles(".class", untransformedDir)) {

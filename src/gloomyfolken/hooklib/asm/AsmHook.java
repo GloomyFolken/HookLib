@@ -3,6 +3,7 @@ package gloomyfolken.hooklib.asm;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodEnter;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodExit;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
@@ -23,12 +24,12 @@ import static org.objectweb.asm.Type.*;
  */
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
-    private String targetClassName;
+    private String targetClassName; // через точки
     private String targetMethodName;
     private List<Type> targetMethodParameters = new ArrayList<Type>(2);
     private Type targetMethodReturnType; //если не задано, то не проверяется
 
-    private String hooksClassName;
+    private String hooksClassName; // через точки
     private String hookMethodName;
     // -1 - значение return
     private List<Integer> transmittableVariableIds = new ArrayList<Integer>(2);
@@ -53,13 +54,27 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     // может быть без возвращаемого типа
     private String returnMethodDescription;
 
+    private boolean createMethod;
+
     protected String getTargetClassName() {
         return targetClassName;
+    }
+
+    private String getTargetClassInternalName() {
+        return targetClassName.replace('.', '/');
+    }
+
+    private String getHookClassInternalName() {
+        return hooksClassName.replace('.', '/');
     }
 
     protected boolean isTargetMethod(String name, String desc) {
         return (targetMethodReturnType == null && desc.startsWith(targetMethodDescription) ||
                 desc.equals(targetMethodDescription)) && name.equals(targetMethodName);
+    }
+
+    protected boolean getCreateMethod() {
+        return createMethod;
     }
 
     protected HookInjectorFactory getInjectorFactory() {
@@ -70,6 +85,30 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         return hookMethodName != null && hooksClassName != null;
     }
 
+    protected void createMethod(HookInjectorClassVisitor classVisitor) {
+        ClassMetadataReader.MethodReference superMethod = classVisitor.transformer.classMetadataReader
+                .findVirtualMethod(getTargetClassInternalName(), targetMethodName, targetMethodDescription);
+        // юзаем название суперметода, потому что findVirtualMethod может вернуть метод с другим названием
+        MethodVisitor mv = classVisitor.visitMethod(Opcodes.ACC_PUBLIC,
+                superMethod == null ? targetMethodName : superMethod.name, targetMethodDescription, null, null);
+        if (mv instanceof HookInjectorMethodVisitor) {
+            HookInjectorMethodVisitor inj = (HookInjectorMethodVisitor) mv;
+            inj.visitCode();
+            inj.visitLabel(new Label());
+            if (superMethod == null) {
+                injectDefaultValue(inj, targetMethodReturnType);
+            } else {
+                injectSuperCall(inj, superMethod);
+            }
+            injectReturn(inj, targetMethodReturnType);
+            inj.visitLabel(new Label());
+            inj.visitMaxs(0, 0);
+            inj.visitEnd();
+        } else {
+            throw new IllegalArgumentException("Hook injector not created");
+        }
+    }
+
     protected void inject(HookInjectorMethodVisitor inj) {
         Type targetMethodReturnType = inj.methodType.getReturnType();
 
@@ -77,7 +116,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         int returnLocalId = -1;
         if (hasReturnValueParameter) {
             returnLocalId = inj.newLocal(targetMethodReturnType);
-            inj.storeLocal(returnLocalId, targetMethodReturnType);
+            inj.visitVarInsn(targetMethodReturnType.getOpcode(54), returnLocalId); //storeLocal
         }
 
         // вызываем хук-метод
@@ -87,7 +126,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
             if (returnValue == ReturnValue.HOOK_RETURN_VALUE || returnCondition.requiresCondition) {
                 hookResultLocalId = inj.newLocal(hookMethodReturnType);
-                inj.storeLocal(hookResultLocalId, hookMethodReturnType);
+                inj.visitVarInsn(hookMethodReturnType.getOpcode(54), hookResultLocalId); //storeLocal
             }
         }
 
@@ -97,7 +136,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
             // вставляем GOTO-переход к label'у после вызова return
             if (returnCondition != ReturnCondition.ALWAYS) {
-                inj.loadLocal(hookResultLocalId, hookMethodReturnType);
+                inj.visitVarInsn(hookMethodReturnType.getOpcode(21), hookResultLocalId); //loadLocal
                 if (returnCondition == ReturnCondition.ON_TRUE) {
                     inj.visitJumpInsn(IFEQ, label);
                 } else if (returnCondition == ReturnCondition.ON_NULL) {
@@ -113,7 +152,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             } else if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) {
                 inj.visitLdcInsn(primitiveConstant);
             } else if (returnValue == ReturnValue.HOOK_RETURN_VALUE) {
-                inj.loadLocal(hookResultLocalId, hookMethodReturnType);
+                inj.visitVarInsn(hookMethodReturnType.getOpcode(21), hookResultLocalId); //loadLocal
             } else if (returnValue == ReturnValue.ANOTHER_METHOD_RETURN_VALUE) {
                 String returnMethodDescription = this.returnMethodDescription;
                 // если не был определён заранее нужный возвращаемый тип, то добавляем его к описанию
@@ -132,11 +171,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
         //кладем в стек значение, которое шло в return
         if (hasReturnValueParameter) {
-            injectVarInsn(inj, targetMethodReturnType, returnLocalId);
+            injectLoad(inj, targetMethodReturnType, returnLocalId);
         }
     }
 
-    private void injectVarInsn(HookInjectorMethodVisitor inj, Type parameterType, int variableId) {
+    private void injectLoad(HookInjectorMethodVisitor inj, Type parameterType, int variableId) {
         int opcode;
         if (parameterType == INT_TYPE || parameterType == BYTE_TYPE || parameterType == CHAR_TYPE ||
                 parameterType == BOOLEAN_TYPE || parameterType == SHORT_TYPE) {
@@ -150,7 +189,47 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         } else {
             opcode = ALOAD;
         }
-        inj.getBasicVisitor().visitVarInsn(opcode, variableId);
+        inj.visitVarInsn(opcode, variableId);
+    }
+
+    private void injectSuperCall(HookInjectorMethodVisitor inj, ClassMetadataReader.MethodReference method) {
+        int variableId = 0;
+        for (int i = 0; i <= targetMethodParameters.size(); i++) {
+            Type parameterType = i == 0 ? TypeHelper.getType(targetClassName) : targetMethodParameters.get(i - 1);
+            injectLoad(inj, parameterType, variableId);
+            if (parameterType.getSort() == Type.DOUBLE || parameterType.getSort() == Type.LONG) {
+                variableId += 2;
+            } else {
+                variableId++;
+            }
+        }
+        inj.visitMethodInsn(INVOKESPECIAL, method.owner, method.name, method.desc, false);
+    }
+
+    private void injectDefaultValue(HookInjectorMethodVisitor inj, Type targetMethodReturnType) {
+        switch (targetMethodReturnType.getSort()) {
+            case Type.VOID:
+                break;
+            case Type.BOOLEAN:
+            case Type.CHAR:
+            case Type.BYTE:
+            case Type.SHORT:
+            case Type.INT:
+                inj.visitInsn(Opcodes.ICONST_0);
+                break;
+            case Type.FLOAT:
+                inj.visitInsn(Opcodes.FCONST_0);
+                break;
+            case Type.LONG:
+                inj.visitInsn(Opcodes.LCONST_0);
+                break;
+            case Type.DOUBLE:
+                inj.visitInsn(Opcodes.DCONST_0);
+                break;
+            default:
+                inj.visitInsn(Opcodes.ACONST_NULL);
+                break;
+        }
     }
 
     private void injectReturn(HookInjectorMethodVisitor inj, Type targetMethodReturnType) {
@@ -185,10 +264,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                 if (variableId > 0) variableId--;
             }
             if (variableId == -1) variableId = returnLocalId;
-            injectVarInsn(inj, parameterType, variableId);
+            injectLoad(inj, parameterType, variableId);
         }
 
-        inj.visitMethodInsn(INVOKESTATIC, hooksClassName.replace(".", "/"), name, desc);
+        inj.visitMethodInsn(INVOKESTATIC, getHookClassInternalName(), name, desc, false);
     }
 
     @Override
@@ -633,6 +712,17 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             return this;
         }
 
+        /**
+         * Позволяет не только вставлять хуки в существующие методы, но и добавлять новые. Это может понадобиться,
+         * когда нужно переопределить метод суперкласса. Если супер-метод найден, то тело генерируемого метода
+         * представляет собой вызов супер-метода. Иначе это просто пустой метод или return false/0/null в зависимости
+         * от возвращаемого типа.
+         */
+        public Builder setCreateMethod(boolean createMethod) {
+            AsmHook.this.createMethod = createMethod;
+            return this;
+        }
+
         private String getMethodDesc(Type returnType, List<Type> paramTypes) {
             Type[] paramTypesArray = paramTypes.toArray(new Type[0]);
             if (returnType == null) {
@@ -652,7 +742,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         public AsmHook build() {
             AsmHook hook = AsmHook.this;
 
-            hook.targetMethodDescription = getMethodDesc(targetMethodReturnType, hook.targetMethodParameters);
+            if (hook.createMethod && hook.targetMethodReturnType == null) {
+                hook.targetMethodReturnType = hook.hookMethodReturnType;
+            }
+            hook.targetMethodDescription = getMethodDesc(hook.targetMethodReturnType, hook.targetMethodParameters);
 
             if (hook.hasHookMethod()) {
                 hook.hookMethodDescription = Type.getMethodDescriptor(hook.hookMethodReturnType,

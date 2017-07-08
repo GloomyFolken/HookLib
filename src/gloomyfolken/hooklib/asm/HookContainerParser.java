@@ -4,7 +4,7 @@ import gloomyfolken.hooklib.asm.Hook.LocalVariable;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
 import org.objectweb.asm.*;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -38,12 +38,16 @@ public class HookContainerParser {
     }
 
     protected void parseHooks(String className) {
-        transformer.logger.debug("Parsing hooks contatiner " + className);
-        parseHooks(ReadClassHelper.getClassData(className));
+        transformer.logger.debug("Parsing hooks container " + className);
+        try {
+            transformer.classMetadataReader.acceptVisitor(className, new HookClassVisitor());
+        } catch (IOException e) {
+            transformer.logger.severe("Can not parse hooks container " + className, e);
+        }
     }
 
-    protected void parseHooks(InputStream input) {
-        ReadClassHelper.acceptVisitor(input, new HookClassVisitor());
+    protected void parseHooks(byte[] classData) {
+
     }
 
     private void invalidHook(String message) {
@@ -137,6 +141,9 @@ public class HookContainerParser {
             }
         }
 
+        // setReturnCondition и setReturnValue сетают тип хук-метода, поэтому сетнуть его вручную можно только теперь
+        builder.setHookMethodReturnType(methodType.getReturnType());
+
         if (returnCondition == ReturnCondition.ON_TRUE && methodType.getReturnType() != Type.BOOLEAN_TYPE) {
             invalidHook("Hook method must return boolean if returnCodition is ON_TRUE.");
             return;
@@ -152,7 +159,9 @@ public class HookContainerParser {
             builder.setPriority(HookPriority.valueOf((String) annotationValues.get("priority")));
         }
 
-        builder.setHookMethodReturnType(methodType.getReturnType());
+        if (annotationValues.containsKey("createMethod")) {
+            builder.setCreateMethod(Boolean.TRUE.equals(annotationValues.get("createMethod")));
+        }
 
         transformer.registerHook(builder.build());
     }

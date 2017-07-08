@@ -10,7 +10,7 @@ import java.util.Map;
 public class HookLibPlugin implements IFMLLoadingPlugin {
 
     private static boolean obf;
-    private static boolean cheched;
+    private static boolean checked;
 
     // 1.6.x only
     public String[] getLibraryRequestClass() {
@@ -41,7 +41,7 @@ public class HookLibPlugin implements IFMLLoadingPlugin {
     public void injectData(Map<String, Object> data) {}
 
     public static boolean getObfuscated() {
-        if (!cheched) {
+        if (!checked) {
             try {
                 Field deobfField = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
                 deobfField.setAccessible(true);
@@ -50,7 +50,7 @@ public class HookLibPlugin implements IFMLLoadingPlugin {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            cheched = true;
+            checked = true;
         }
         return obf;
     }

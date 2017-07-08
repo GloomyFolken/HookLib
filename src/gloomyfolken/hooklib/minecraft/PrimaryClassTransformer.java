@@ -11,6 +11,11 @@ import org.objectweb.asm.Type;
 import java.util.HashMap;
 import java.util.List;
 
+/** Этим трансформером трансформятся все классы, которые грузятся раньше майновских.
+ * В момент начала загрузки майна (точнее, чуть раньше - в Loader.injectData) все хуки отсюда переносятся в
+ * MinecraftClassTransformer. Такой перенос нужен, чтобы трансформеры хуклибы применялись последними - в частности,
+ * после деобфускации, которую делает фордж.
+ */
 public class PrimaryClassTransformer extends HookClassTransformer implements IClassTransformer {
 
     // костыль для случая, когда другой мод дергает хуклиб раньше, чем она запустилась
@@ -18,6 +23,8 @@ public class PrimaryClassTransformer extends HookClassTransformer implements ICl
     boolean registeredSecondTransformer;
 
     public PrimaryClassTransformer() {
+        this.classMetadataReader = HookLoader.getDeobfuscationMetadataReader();
+
         if (instance != null) {
             // переносим хуки, которые уже успели нарегистрировать
             this.hooksMap.putAll(PrimaryClassTransformer.instance.getHooksMap());
@@ -35,7 +42,9 @@ public class PrimaryClassTransformer extends HookClassTransformer implements ICl
 
     @Override
     protected HookInjectorClassVisitor createInjectorClassVisitor(ClassWriter cw, List<AsmHook> hooks) {
-        return new HookInjectorClassVisitor(cw, hooks) {
+        // Если ничего не сломается, то никакие майновские классы не должны грузиться этим трансформером -
+        // соответственно, и костыли для деобфускации названий методов тут не нужны.
+        return new HookInjectorClassVisitor(this, cw, hooks) {
             @Override
             protected boolean isTargetMethod(AsmHook hook, String name, String desc) {
                 return super.isTargetMethod(hook, name, mapDesc(desc));
@@ -72,9 +81,10 @@ public class PrimaryClassTransformer extends HookClassTransformer implements ICl
             for (int i = 0; i < type.getDimensions(); i++) {
                 sb.append("[");
             }
-            sb.append("L");
+            boolean isPrimitiveArray = type.getSort() < 9;
+            if (!isPrimitiveArray) sb.append("L");
             sb.append(map(type.getElementType()).getInternalName());
-            sb.append(";");
+            if (!isPrimitiveArray) sb.append(";");
             return Type.getType(sb.toString());
         } else if (type.getSort() == 10) {
             String unmappedName = FMLDeobfuscatingRemapper.INSTANCE.map(type.getInternalName());
