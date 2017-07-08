@@ -2,13 +2,15 @@ package gloomyfolken.hooklib.asm;
 
 import org.objectweb.asm.*;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VariableIdHelper {
 
-    public static List<String> listLocalVariables(InputStream classData, final String methodName, Type... argTypes) {
+    private static ClassMetadataReader classMetadataReader = new ClassMetadataReader();
+
+    public static List<String> listLocalVariables(byte[] classData, final String methodName, Type... argTypes) {
         final List<String> localVariables = new ArrayList<String>();
         String methodDesc = Type.getMethodDescriptor(Type.VOID_TYPE, argTypes);
         final String methodDescWithoutReturnType = methodDesc.substring(0, methodDesc.length() - 1);
@@ -33,23 +35,23 @@ public class VariableIdHelper {
             }
         };
 
-        ReadClassHelper.acceptVisitor(classData, cv);
+        classMetadataReader.acceptVisitor(classData, cv);
         return localVariables;
     }
 
-    public static List<String> listLocalVariables(String className, final String methodName, Type... argTypes) {
-        return listLocalVariables(ReadClassHelper.getClassData(className), methodName, argTypes);
+    public static List<String> listLocalVariables(String className, final String methodName, Type... argTypes) throws IOException {
+        return listLocalVariables(classMetadataReader.getClassData(className), methodName, argTypes);
     }
 
-    public static void printLocalVariables(InputStream classData, String methodName, Type... argTypes) {
+    public static void printLocalVariables(byte[] classData, String methodName, Type... argTypes) {
         List<String> locals = listLocalVariables(classData, methodName, argTypes);
         for (String str : locals) {
             System.out.println(str);
         }
     }
 
-    public static void printLocalVariables(String className, String methodName, Type... argTypes) {
-        printLocalVariables(ReadClassHelper.getClassData(className), methodName, argTypes);
+    public static void printLocalVariables(String className, String methodName, Type... argTypes) throws IOException {
+        printLocalVariables(classMetadataReader.getClassData(className), methodName, argTypes);
     }
 
 
