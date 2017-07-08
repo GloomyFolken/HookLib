@@ -7,7 +7,7 @@
 -----------
 Чтобы запустить HookLib и пример к ней в IDE, необходимо дописать в VM arguments: 
 ```
--Dfml.coreMods.load=gloomyfolken.hooklib.minecraft.HookLibPlugin,gloomyfolken.hooklib.example.ExampleHookLoader
+-Dfml.coreMods.load=gloomyfolken.hooklib.example.ExampleHookLoader
 ```
 В IntelliJ IDEA: Run -> Edit configurations
 
@@ -35,5 +35,5 @@ public static int getTotalArmorValue(ForgeHooks fh, EntityPlayer player, @Return
 
 Поддержка версий Minecraft
 --------------------------
-HookLib не использует никаких классов Майнкрафта, поэтому с выходом новых версий ничего переписывать не надо. Небольшой проблемой являются обновления форджа: он слегка меняется со временем, и с очередной версий может потребоваться какой-нибудь фикс. Версия для 1.8 вынесена в отдельную ветку (спасибо, @LexManos, за переименованные пакеты, блджад!)
+HookLib не использует никаких классов Майнкрафта, поэтому с выходом новых версий ничего переписывать не надо. Небольшой проблемой являются обновления форджа: он слегка меняется со временем, и с очередной версий может потребоваться какой-нибудь фикс. Для использования начиная с версий Minecraft 1.8 необходимо пройтись по всему пакету gloomyfolken.hooklib.minecraft и заменить cpw.mods.fml на net.minecraftforge.fml (разработчики форджа сменили название пакета).
 
