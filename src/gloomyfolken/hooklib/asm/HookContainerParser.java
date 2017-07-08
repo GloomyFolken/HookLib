@@ -162,6 +162,9 @@ public class HookContainerParser {
         if (annotationValues.containsKey("createMethod")) {
             builder.setCreateMethod(Boolean.TRUE.equals(annotationValues.get("createMethod")));
         }
+        if (annotationValues.containsKey("isMandatory")) {
+            builder.setMandatory(Boolean.TRUE.equals(annotationValues.get("isMandatory")));
+        }
 
         transformer.registerHook(builder.build());
     }

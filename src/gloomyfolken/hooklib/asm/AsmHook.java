@@ -55,6 +55,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private String returnMethodDescription;
 
     private boolean createMethod;
+    private boolean isMandatory;
 
     protected String getTargetClassName() {
         return targetClassName;
@@ -75,6 +76,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
     protected boolean getCreateMethod() {
         return createMethod;
+    }
+
+    protected boolean isMandatory() {
+         return isMandatory;
     }
 
     protected HookInjectorFactory getInjectorFactory() {
@@ -720,6 +725,15 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          */
         public Builder setCreateMethod(boolean createMethod) {
             AsmHook.this.createMethod = createMethod;
+            return this;
+        }
+
+        /**
+         * Позволяет объявить хук "обязательным" для запуска игры. В случае неудачи во время вставки такого хука
+         * будет не просто выведено сообщение в лог, а крашнется игра.
+         */
+        public Builder setMandatory(boolean isMandatory) {
+            AsmHook.this.isMandatory = isMandatory;
             return this;
         }
 
