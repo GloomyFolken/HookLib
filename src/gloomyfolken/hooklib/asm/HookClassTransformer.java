@@ -38,14 +38,8 @@ public class HookClassTransformer {
         List<AsmHook> hooks = hooksMap.get(className);
 
         if (hooks != null) {
-            if (className.contains("BlockDirt")) {
-                System.out.println("dir");
-            }
             Collections.sort(hooks);
             logger.debug("Injecting hooks into class " + className);
-            int numHooks = hooks.size();
-            List<AsmHook> notInjectedHooks = null;
-
             try {
                 /*
                  Начиная с седьмой версии джавы, сильно изменился процесс верификации байткода.
@@ -61,8 +55,11 @@ public class HookClassTransformer {
                 ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
                 HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
                 cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
-                notInjectedHooks = hooksWriter.notInjectedHooks;
                 bytecode = cw.toByteArray();
+                for (AsmHook hook : hooksWriter.injectedHooks) {
+                    logger.debug("Patching method " + hook.getPatchedMethodName());
+                }
+                hooks.removeAll(hooksWriter.injectedHooks);
             } catch (Exception e) {
                 logger.severe("A problem has occurred during transformation of class " + className + ".");
                 logger.severe("Attached hooks:");
@@ -72,13 +69,7 @@ public class HookClassTransformer {
                 logger.severe("Stack trace:", e);
             }
 
-            if (notInjectedHooks == null) {
-                notInjectedHooks = hooks;
-            }
-            int numInjectedHooks = numHooks - notInjectedHooks.size();
-            logger.debug("Successfully injected " + numInjectedHooks + " hook" +
-                    (numInjectedHooks == 1 ? "" : "s") + " to " + className);
-            for (AsmHook notInjected : notInjectedHooks) {
+            for (AsmHook notInjected : hooks) {
                 if (notInjected.isMandatory()) {
                     throw new RuntimeException("Can not find target method of mandatory hook " + notInjected);
                 } else {

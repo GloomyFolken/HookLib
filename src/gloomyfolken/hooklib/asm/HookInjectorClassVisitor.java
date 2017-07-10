@@ -6,13 +6,12 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class HookInjectorClassVisitor extends ClassVisitor {
 
     List<AsmHook> hooks;
-    List<AsmHook> notInjectedHooks = new ArrayList<>(0);
+    List<AsmHook> injectedHooks = new ArrayList<AsmHook>(1);
     boolean visitingHook;
     HookClassTransformer transformer;
 
@@ -34,13 +33,11 @@ public class HookInjectorClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        Iterator<AsmHook> it = hooks.iterator();
-        while (it.hasNext()) {
-            AsmHook hook = it.next();
-            if (isTargetMethod(hook, name, desc)) {
+        for (AsmHook hook : hooks) {
+            if (isTargetMethod(hook, name, desc) && !injectedHooks.contains(hook)) {
                 // добавляет MethodVisitor в цепочку
                 mv = hook.getInjectorFactory().createHookInjector(mv, access, name, desc, hook, this);
-                it.remove();
+                injectedHooks.add(hook);
             }
         }
         return mv;
@@ -48,18 +45,9 @@ public class HookInjectorClassVisitor extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        while (!hooks.isEmpty()) {
-            AsmHook hook = hooks.get(0);
-            if (hook.getCreateMethod()) {
+        for (AsmHook hook : hooks) {
+            if (hook.getCreateMethod() && !injectedHooks.contains(hook)) {
                 hook.createMethod(this);
-            }
-
-            if (hooks.contains(hook)) {
-                // Если был вызван hook.createMethod, то по идее хук должен удалиться в createMethod,
-                // так как оттуда будет вызван visitMethod, но если используется кривой инжектор или
-                // еще что-то пошло не так, то тоже удалить его руками
-                notInjectedHooks.add(hook);
-                hooks.remove(0);
             }
         }
         super.visitEnd();

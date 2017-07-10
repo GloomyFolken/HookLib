@@ -24,7 +24,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
     static MinecraftClassTransformer instance;
     private Map<Integer, String> methodNames;
 
-    private static List<IClassTransformer> postTransformers = new ArrayList<>();
+    private static List<IClassTransformer> postTransformers = new ArrayList<IClassTransformer>();
 
     public MinecraftClassTransformer() {
         instance = this;

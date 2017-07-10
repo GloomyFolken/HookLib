@@ -21,7 +21,7 @@ public class DictionaryGenerator {
     public static void main(String[] args) throws Exception {
         List<String> lines = FileUtils.readLines(new File("methods.csv"));
         lines.remove(0);
-        HashMap<Integer, String> map = new HashMap<>();
+        HashMap<Integer, String> map = new HashMap<Integer, String>();
         for (String str : lines) {
             String[] splitted = str.split(",");
             int first = splitted[0].indexOf('_');

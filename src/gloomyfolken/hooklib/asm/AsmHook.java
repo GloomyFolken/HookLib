@@ -275,6 +275,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         inj.visitMethodInsn(INVOKESTATIC, getHookClassInternalName(), name, desc, false);
     }
 
+    public String getPatchedMethodName() {
+        return targetClassName + '#' + targetMethodName + targetMethodDescription;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -290,6 +294,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         sb.append(", ReturnValue=" + returnValue);
         if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) sb.append(", Constant=" + primitiveConstant);
         sb.append(", InjectorFactory: " + injectorFactory.getClass().getName());
+        sb.append(", CreateMethod = " + createMethod);
 
         return sb.toString();
     }
