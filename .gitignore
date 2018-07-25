@@ -8,4 +8,7 @@
 /libs/
 .gradle/
 build.gradle
+gradle.properties
+gradle/
+gradlew*
 
