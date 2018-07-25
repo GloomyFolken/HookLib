@@ -7,4 +7,5 @@
 /run/
 /libs/
 .gradle/
+build.gradle
 
