@@ -804,6 +804,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                         "Call setTargetMethodName() before build().");
             }
 
+            if (hook.targetMethodName.equals("<init>") && hook.returnCondition!=ReturnCondition.NEVER) {
+                throw new IllegalStateException("Can not return from constructor before final fields initialized " +
+                        "Don't use targetMethodName = <init> with InjectionPoint.HEAD and with not ReturnCondition.NEVER");
+            }
+
             if (hook.returnValue == ReturnValue.PRIMITIVE_CONSTANT && hook.primitiveConstant == null) {
                 throw new IllegalStateException("Return value is PRIMITIVE_CONSTANT, but the constant is not " +
                         "specified. Call setReturnValue() before build().");
