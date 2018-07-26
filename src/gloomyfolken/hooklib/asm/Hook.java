@@ -20,6 +20,10 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 public @interface Hook {
+    /**
+    * Задает точку вставки хука
+     */
+    At at() default @At(point = InjectionPoint.HEAD);
 
     /**
      * Задает условие, по которому после вызова хука будет вызван return.
