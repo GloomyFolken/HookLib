@@ -19,6 +19,20 @@ public abstract class HookInjectorFactory {
     abstract HookInjectorMethodVisitor createHookInjector(MethodVisitor mv, int access, String name, String desc,
                                                           AsmHook hook, HookInjectorClassVisitor cv);
 
+    static class ByAnchor extends HookInjectorFactory {
+
+        public static final ByAnchor INSTANCE = new ByAnchor();
+
+        private ByAnchor() {}
+
+
+        public HookInjectorMethodVisitor createHookInjector(MethodVisitor mv, int access, String name, String desc,
+                                                            AsmHook hook, HookInjectorClassVisitor cv) {
+            return new HookInjectorMethodVisitor.ByAnchor(mv, access, name, desc, hook, cv);
+        }
+
+    }
+
 
     static class MethodEnter extends HookInjectorFactory {
 

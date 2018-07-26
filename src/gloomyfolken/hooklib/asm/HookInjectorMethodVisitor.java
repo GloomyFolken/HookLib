@@ -6,6 +6,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
+import static gloomyfolken.hooklib.asm.InjectionPoint.HEAD;
+import static gloomyfolken.hooklib.asm.InjectionPoint.METHOD_CALL;
+
 /**
  * Класс, непосредственно вставляющий хук в метод.
  * Чтобы указать конкретное место вставки хука, нужно создать класс extends HookInjector.
@@ -41,6 +44,35 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
     MethodVisitor getBasicVisitor() {
         return mv;
+    }
+
+    /**
+     * Вставляет хук в произвольном методе
+     */
+
+    public static class ByAnchor extends HookInjectorMethodVisitor {
+
+        public ByAnchor(MethodVisitor mv, int access, String name, String desc,
+                        AsmHook hook, HookInjectorClassVisitor cv) {
+            super(mv, access, name, desc, hook, cv);
+        }
+
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
+            if(hook.getAnchorPoint()==METHOD_CALL && hook.getAnchorTarget().equals(name))
+                visitHook();
+        }
+
+        protected void onMethodEnter() {
+            if(hook.getAnchorPoint()==HEAD)
+                visitHook();
+        }
+        protected void onMethodExit(int opcode) {
+            if(hook.getAnchorPoint()==InjectionPoint.RETURN && opcode != Opcodes.ATHROW)
+                visitHook();
+        }
+
     }
 
     /**
