@@ -259,6 +259,9 @@ public class HookContainerParser {
             }
         }
 
+        /** Вложенные аннотации
+         */
+
         @Override
         public AnnotationVisitor visitAnnotation(String name, String desc) {
             if (inHookAnnotation) {
