@@ -8,15 +8,25 @@ import gloomyfolken.hooklib.asm.ReturnCondition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.tileentity.IHopper;
+import net.minecraft.tileentity.TileEntityHopper;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.ForgeHooks;
 
 public class TestHooks {
+    @Hook(at = @At(point = InjectionPoint.METHOD_CALL, target = "getSlotsForFace"), returnCondition = ReturnCondition.ON_TRUE, booleanReturnConstant = true)
+    public static boolean isInventoryFull(TileEntityHopper tile, IInventory inventoryIn, EnumFacing side)
+    {
+        return ((ISidedInventory)inventoryIn).getSlotsForFace(side)==null;
+    }
 
     /**
      * Цель: при каждом ресайзе окна выводить в консоль новый размер, а также похерит ресайз:D
      * Чтобы починить нужно юзать InjectionPoint.RETURN или ReturnCondition.NEVER
      */
-    @Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
+    //@Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
     public static void resize(Minecraft mc, int x, int y) {
         System.out.println("Resize, x=" + x + ", y=" + y);
     }
