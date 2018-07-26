@@ -52,12 +52,12 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
     public static class ByAnchor extends HookInjectorMethodVisitor {
 
-        private Integer order;
+        private Integer ordinal;
 
         public ByAnchor(MethodVisitor mv, int access, String name, String desc, AsmHook hook, HookInjectorClassVisitor cv) {
             super(mv, access, name, desc, hook, cv);
 
-            order=hook.getAnchorOrder();
+            ordinal =hook.getAnchorOrdinal();
         }
 
         @Override
@@ -79,13 +79,13 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
         }
 
         private void visitOrderedHook() {
-            if (order == 0) {
+            if (ordinal == 0) {
                 visitHook();
-                order = -2;
-            } else if(order == -1) {
+                ordinal = -2;
+            } else if(ordinal == -1) {
                 visitHook();
-            } else if(order>0)
-                order -= 1;
+            } else if(ordinal >0)
+                ordinal -= 1;
         }
 
     }
