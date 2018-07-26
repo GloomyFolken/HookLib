@@ -814,12 +814,17 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                         "specified. Call setReturnMethod() before build().");
             }
 
-            if (!(hook.injectorFactory instanceof MethodExit) && hook.hasReturnValueParameter) {
+            if (!isReturnHook(hook) && hook.hasReturnValueParameter) {
                 throw new IllegalStateException("Can not pass return value to hook method " +
                         "because hook location is not return insn.");
             }
 
             return hook;
+        }
+
+        private boolean isReturnHook(AsmHook hook) {
+            return (hook.injectorFactory instanceof MethodExit) ||
+                    ((hook.injectorFactory instanceof HookInjectorFactory.ByAnchor) && hook.getAnchorPoint()==InjectionPoint.RETURN);
         }
 
     }
