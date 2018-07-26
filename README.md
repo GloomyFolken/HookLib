@@ -27,7 +27,7 @@ Created-By: 1.7.0 (Oracle Corporation)
 -------------------
 Полный код и больше примеров есть в gloomyfolken.hooklib.example
 ```java
-@Hook(injectOnExit = true, returnCondition = ReturnCondition.ALWAYS)
+@Hook(at = @At(point = InjectionPoint.RETURN), returnCondition = ReturnCondition.ALWAYS)
 public static int getTotalArmorValue(ForgeHooks fh, EntityPlayer player, @ReturnValue int returnValue) {
     return returnValue/2;
 }
