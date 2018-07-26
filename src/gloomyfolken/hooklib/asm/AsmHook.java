@@ -8,6 +8,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -23,6 +24,14 @@ import static org.objectweb.asm.Type.*;
  * hookClass (класс с хуком) - класс, в котором содержится хук-метод
  */
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
+
+    private HashMap<String, Object> anchor;
+    public InjectionPoint getAnchorPoint() {
+        return InjectionPoint.valueOf((String) anchor.get("point"));
+    }
+    public String getAnchorTarget() {
+        return (String) anchor.get("target");
+    }
 
     private String targetClassName; // через точки
     private String targetMethodName;
@@ -44,6 +53,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private HookInjectorFactory injectorFactory = ON_ENTER_FACTORY;
     private HookPriority priority = HookPriority.NORMAL;
 
+    public static final HookInjectorFactory BY_ANCHOR_FACTORY = HookInjectorFactory.ByAnchor.INSTANCE;
     public static final HookInjectorFactory ON_ENTER_FACTORY = MethodEnter.INSTANCE;
     public static final HookInjectorFactory ON_EXIT_FACTORY = MethodExit.INSTANCE;
 
@@ -318,6 +328,11 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
         private Builder() {
 
+        }
+        public Builder setAnchorForInject(HashMap<String,Object> anchor) {
+            AsmHook.this.anchor = anchor;
+            setInjectorFactory(AsmHook.BY_ANCHOR_FACTORY);
+            return this;
         }
 
         /**

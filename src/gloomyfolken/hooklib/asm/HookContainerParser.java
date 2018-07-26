@@ -116,6 +116,10 @@ public class HookContainerParser {
             builder.setInjectorFactory(new HookInjectorFactory.LineNumber(line));
         }
 
+        if (annotationValues.containsKey("at")) {
+            builder.setAnchorForInject((HashMap<String, Object>) annotationValues.get("at"));
+        }
+
         if (annotationValues.containsKey("returnType")) {
             builder.setTargetMethodReturnType((String) annotationValues.get("returnType"));
         }
@@ -253,6 +257,24 @@ public class HookContainerParser {
             if (inHookAnnotation) {
                 annotationValues.put(name, value);
             }
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String name, String desc) {
+            if (inHookAnnotation) {
+                annotationValues.put(name, new HashMap<String, Object>());
+                return new AnnotationVisitor(Opcodes.ASM5) {
+                    @Override
+                    public void visit(String name1, Object value) {
+                        ((HashMap<String, Object>)annotationValues.get(name)).put(name1,value);
+                    }
+
+                    @Override
+                    public void visitEnum(String name1, String desc, String value) {
+                        ((HashMap<String, Object>)annotationValues.get(name)).put(name1,value);
+                    }
+                };
+            }else return null;
         }
 
         @Override
