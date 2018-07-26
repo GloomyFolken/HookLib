@@ -15,6 +15,6 @@ public class ExampleHookLoader extends HookLoader {
     @Override
     public void registerHooks() {
         //регистрируем класс, где есть методы с аннотацией @Hook
-        registerHookContainer("gloomyfolken.hooklib.example.AnnotationHooks");
+        registerHookContainer("gloomyfolken.hooklib.example.TestHooks");
     }
 }
