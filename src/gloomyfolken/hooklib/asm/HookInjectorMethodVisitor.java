@@ -52,16 +52,20 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
     public static class ByAnchor extends HookInjectorMethodVisitor {
 
-        public ByAnchor(MethodVisitor mv, int access, String name, String desc,
-                        AsmHook hook, HookInjectorClassVisitor cv) {
+        private Integer order;
+
+        public ByAnchor(MethodVisitor mv, int access, String name, String desc, AsmHook hook, HookInjectorClassVisitor cv) {
             super(mv, access, name, desc, hook, cv);
+
+            order=hook.getAnchorOrder();
         }
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             super.visitMethodInsn(opcode, owner, name, desc, itf);
             if(hook.getAnchorPoint()==METHOD_CALL && hook.getAnchorTarget().equals(name))
-                visitHook();
+                visitOrderedHook();
+
         }
 
         protected void onMethodEnter() {
@@ -70,7 +74,18 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
         }
         protected void onMethodExit(int opcode) {
             if(hook.getAnchorPoint()==InjectionPoint.RETURN && opcode != Opcodes.ATHROW)
+                visitOrderedHook();
+
+        }
+
+        private void visitOrderedHook() {
+            if (order == 0) {
                 visitHook();
+                order = -2;
+            } else if(order == -1) {
+                visitHook();
+            } else if(order>0)
+                order -= 1;
         }
 
     }

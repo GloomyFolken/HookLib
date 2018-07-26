@@ -1,10 +1,7 @@
 package gloomyfolken.hooklib.example;
 
-import gloomyfolken.hooklib.asm.At;
-import gloomyfolken.hooklib.asm.Hook;
+import gloomyfolken.hooklib.asm.*;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
-import gloomyfolken.hooklib.asm.InjectionPoint;
-import gloomyfolken.hooklib.asm.ReturnCondition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
