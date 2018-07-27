@@ -26,26 +26,16 @@ import static org.objectweb.asm.Type.*;
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
     private HashMap<String, Object> anchor;
-    public InjectionPoint getAnchorPoint() {
-        return InjectionPoint.valueOf((String) anchor.get("point"));
-    }
-    public String getAnchorTarget() {
-        return (String) anchor.get("target");
-    }
-    public Integer getAnchorOrdinal() {
-        return (Integer) anchor.get("ordinal");
-    }
-
     private String targetClassName; // через точки
     private String targetMethodName;
-    private List<Type> targetMethodParameters = new ArrayList<Type>(2);
+    private List<Type> targetMethodParameters = new ArrayList<>(2);
     private Type targetMethodReturnType; //если не задано, то не проверяется
 
     private String hooksClassName; // через точки
     private String hookMethodName;
     // -1 - значение return
-    private List<Integer> transmittableVariableIds = new ArrayList<Integer>(2);
-    private List<Type> hookMethodParameters = new ArrayList<Type>(2);
+    private List<Integer> transmittableVariableIds = new ArrayList<>(2);
+    private List<Type> hookMethodParameters = new ArrayList<>(2);
     private Type hookMethodReturnType = Type.VOID_TYPE;
     private boolean hasReturnValueParameter; // если в хук-метод передается значение из return
 
@@ -70,6 +60,18 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private boolean createMethod;
     private boolean isMandatory;
 
+    public InjectionPoint getAnchorPoint() {
+        return InjectionPoint.valueOf((String) anchor.get("point"));
+    }
+
+    public String getAnchorTarget() {
+        return (String) anchor.get("target");
+    }
+
+    public Integer getAnchorOrdinal() {
+        return (Integer) anchor.get("ordinal");
+    }
+
     protected String getTargetClassName() {
         return targetClassName;
     }
@@ -92,7 +94,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     }
 
     protected boolean isMandatory() {
-         return isMandatory;
+        return isMandatory;
     }
 
     protected HookInjectorFactory getInjectorFactory() {
@@ -332,7 +334,8 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         private Builder() {
 
         }
-        public Builder setAnchorForInject(HashMap<String,Object> anchor) {
+
+        public Builder setAnchorForInject(HashMap<String, Object> anchor) {
             AsmHook.this.anchor = anchor;
             setInjectorFactory(AsmHook.BY_ANCHOR_FACTORY);
             return this;
@@ -807,7 +810,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                         "Call setTargetMethodName() before build().");
             }
 
-            if (hook.targetMethodName.equals("<init>") && hook.returnCondition!=ReturnCondition.NEVER) {
+            if (hook.targetMethodName.equals("<init>") && hook.returnCondition != ReturnCondition.NEVER) {
                 throw new IllegalStateException("Can not return from constructor before final fields initialized " +
                         "Don't use targetMethodName = <init> with InjectionPoint.HEAD and with not ReturnCondition.NEVER");
             }
@@ -832,7 +835,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
         private boolean isReturnHook(AsmHook hook) {
             return (hook.injectorFactory instanceof MethodExit) ||
-                    ((hook.injectorFactory instanceof HookInjectorFactory.ByAnchor) && hook.getAnchorPoint()==InjectionPoint.RETURN);
+                    ((hook.injectorFactory instanceof HookInjectorFactory.ByAnchor) && hook.getAnchorPoint() == InjectionPoint.RETURN);
         }
 
     }

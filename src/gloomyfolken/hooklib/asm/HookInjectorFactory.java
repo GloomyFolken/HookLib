@@ -26,7 +26,6 @@ public abstract class HookInjectorFactory {
 
         private ByAnchor() {}
 
-
         public HookInjectorMethodVisitor createHookInjector(MethodVisitor mv, int access, String name, String desc,
                                                             AsmHook hook, HookInjectorClassVisitor cv) {
             return new HookInjectorMethodVisitor.ByAnchor(mv, access, name, desc, hook, cv);

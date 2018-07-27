@@ -25,7 +25,7 @@ public class HookContainerParser {
     Ключ - номер параметра, значение - номер локальной переменной для перехвата
     или -1 для перехвата значения наверху стека.
      */
-    private HashMap<Integer, Integer> parameterAnnotations = new HashMap<Integer, Integer>();
+    private HashMap<Integer, Integer> parameterAnnotations = new HashMap<>();
 
     private boolean inHookAnnotation;
 
@@ -212,14 +212,14 @@ public class HookContainerParser {
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             if (HOOK_DESC.equals(desc)) {
-                annotationValues = new HashMap<String, Object>();
+                annotationValues = new HashMap<>();
                 inHookAnnotation = true;
             }
             return new HookAnnotationVisitor();
         }
 
         @Override
-        public AnnotationVisitor visitParameterAnnotation(final int parameter, String desc, boolean visible) {
+        public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
             if (RETURN_DESC.equals(desc)) {
                 parameterAnnotations.put(parameter, -1);
             }
@@ -259,7 +259,8 @@ public class HookContainerParser {
             }
         }
 
-        /** Вложенные аннотации
+        /**
+         * Вложенные аннотации
          */
 
         @Override
@@ -269,15 +270,16 @@ public class HookContainerParser {
                 return new AnnotationVisitor(Opcodes.ASM5) {
                     @Override
                     public void visit(String name1, Object value) {
-                        ((HashMap<String, Object>)annotationValues.get(name)).put(name1,value);
+                        ((HashMap<String, Object>) annotationValues.get(name)).put(name1, value);
                     }
 
                     @Override
                     public void visitEnum(String name1, String desc, String value) {
-                        ((HashMap<String, Object>)annotationValues.get(name)).put(name1,value);
+                        ((HashMap<String, Object>) annotationValues.get(name)).put(name1, value);
                     }
                 };
-            }else return null;
+            } else
+                return null;
         }
 
         @Override
