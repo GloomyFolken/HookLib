@@ -69,7 +69,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     }
 
     public Integer getAnchorOrdinal() {
-        return (Integer) anchor.get("ordinal");
+        return (Integer) anchor.getOrDefault("ordinal",0);
     }
 
     protected String getTargetClassName() {
