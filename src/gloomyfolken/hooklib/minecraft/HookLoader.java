@@ -7,21 +7,25 @@ import gloomyfolken.hooklib.asm.HookClassTransformer;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Удобная базовая реализация IFMLLoadingPlugin для использования HookLib.
  * Регистрировать хуки и контейнеры нужно в registerHooks().
  */
 public abstract class HookLoader implements IFMLLoadingPlugin {
+    private static Optional<DeobfuscationTransformer> deobfuscationTransformer=Optional.empty();
 
-    static DeobfuscationTransformer deobfuscationTransformer;
+    static Optional<DeobfuscationTransformer> deobfuscationTransformer(){
+        if (HookLibPlugin.getObfuscated() && !deobfuscationTransformer.isPresent()) {
+            deobfuscationTransformer = Optional.of(new DeobfuscationTransformer());
+        }
+        return deobfuscationTransformer;
+    }
 
     private static ClassMetadataReader deobfuscationMetadataReader;
 
     static {
-        if (HookLibPlugin.getObfuscated()) {
-            deobfuscationTransformer = new DeobfuscationTransformer();
-        }
         deobfuscationMetadataReader = new DeobfuscationMetadataReader();
     }
 
