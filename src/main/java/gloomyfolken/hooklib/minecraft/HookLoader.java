@@ -1,27 +1,31 @@
 package gloomyfolken.hooklib.minecraft;
 
-import cpw.mods.fml.common.asm.transformers.DeobfuscationTransformer;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer;
 import gloomyfolken.hooklib.asm.AsmHook;
 import gloomyfolken.hooklib.asm.ClassMetadataReader;
 import gloomyfolken.hooklib.asm.HookClassTransformer;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Удобная базовая реализация IFMLLoadingPlugin для использования HookLib.
  * Регистрировать хуки и контейнеры нужно в registerHooks().
  */
 public abstract class HookLoader implements IFMLLoadingPlugin {
+    private static Optional<DeobfuscationTransformer> deobfuscationTransformer=Optional.empty();
 
-    static DeobfuscationTransformer deobfuscationTransformer;
+    static Optional<DeobfuscationTransformer> deobfuscationTransformer(){
+        if (HookLibPlugin.getObfuscated() && !deobfuscationTransformer.isPresent()) {
+            deobfuscationTransformer = Optional.of(new DeobfuscationTransformer());
+        }
+        return deobfuscationTransformer;
+    }
 
     private static ClassMetadataReader deobfuscationMetadataReader;
 
     static {
-        if (HookLibPlugin.getObfuscated()) {
-            deobfuscationTransformer = new DeobfuscationTransformer();
-        }
         deobfuscationMetadataReader = new DeobfuscationMetadataReader();
     }
 

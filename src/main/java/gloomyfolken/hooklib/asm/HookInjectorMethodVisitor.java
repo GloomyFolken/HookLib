@@ -6,6 +6,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
+import static gloomyfolken.hooklib.asm.InjectionPoint.HEAD;
+import static gloomyfolken.hooklib.asm.InjectionPoint.METHOD_CALL;
+
 /**
  * Класс, непосредственно вставляющий хук в метод.
  * Чтобы указать конкретное место вставки хука, нужно создать класс extends HookInjector.
@@ -24,8 +27,8 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
         this.hook = hook;
         this.cv = cv;
         isStatic = (access & Opcodes.ACC_STATIC) != 0;
-        this.methodName = name;
-        this.methodType = Type.getMethodType(desc);
+        methodName = name;
+        methodType = Type.getMethodType(desc);
     }
 
     /**
@@ -41,6 +44,50 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
     MethodVisitor getBasicVisitor() {
         return mv;
+    }
+
+    /**
+     * Вставляет хук в произвольном методе
+     */
+
+    public static class ByAnchor extends HookInjectorMethodVisitor {
+
+        private Integer ordinal;
+
+        public ByAnchor(MethodVisitor mv, int access, String name, String desc, AsmHook hook, HookInjectorClassVisitor cv) {
+            super(mv, access, name, desc, hook, cv);
+
+            ordinal = hook.getAnchorOrdinal();
+        }
+
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
+            if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(name))
+                visitOrderedHook();
+
+        }
+
+        protected void onMethodEnter() {
+            if (hook.getAnchorPoint() == HEAD)
+                visitHook();
+        }
+
+        protected void onMethodExit(int opcode) {
+            if (hook.getAnchorPoint() == InjectionPoint.RETURN && opcode != Opcodes.ATHROW)
+                visitOrderedHook();
+
+        }
+
+        private void visitOrderedHook() {
+            if (ordinal == 0) {
+                visitHook();
+                ordinal = -2;
+            } else if (ordinal == -1) {
+                visitHook();
+            } else if (ordinal > 0)
+                ordinal -= 1;
+        }
     }
 
     /**
@@ -94,7 +141,7 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
         @Override
         public void visitLineNumber(int line, Label start) {
             super.visitLineNumber(line, start);
-            if (this.lineNumber == line) visitHook();
+            if (lineNumber == line) visitHook();
         }
     }
 

@@ -3,6 +3,9 @@
 
 Благодаря этому моду становится возможно вставлять хуки (вызовы своих статических методов) в код майнкрафта, форджа и других модов, при этом не обладая никакими познаниями ни в JVM-байткоде, ни в использовании библиотеки ASM.
 
+## Обновления
+Добавлены якоря, позволяющие точнее задавать точки вставки хуков
+
 Запуск в IDE
 -----------
 Чтобы запустить HookLib и пример к ней в IDE, необходимо дописать в VM arguments: 
@@ -27,7 +30,7 @@ Created-By: 1.7.0 (Oracle Corporation)
 -------------------
 Полный код и больше примеров есть в gloomyfolken.hooklib.example
 ```java
-@Hook(injectOnExit = true, returnCondition = ReturnCondition.ALWAYS)
+@Hook(at = @At(point = InjectionPoint.RETURN), returnCondition = ReturnCondition.ALWAYS)
 public static int getTotalArmorValue(ForgeHooks fh, EntityPlayer player, @ReturnValue int returnValue) {
     return returnValue/2;
 }

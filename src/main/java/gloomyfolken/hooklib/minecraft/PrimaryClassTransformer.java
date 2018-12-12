@@ -1,6 +1,6 @@
 package gloomyfolken.hooklib.minecraft;
 
-import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import gloomyfolken.hooklib.asm.AsmHook;
 import gloomyfolken.hooklib.asm.HookClassTransformer;
 import gloomyfolken.hooklib.asm.HookInjectorClassVisitor;

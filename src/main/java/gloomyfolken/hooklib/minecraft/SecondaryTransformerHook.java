@@ -1,6 +1,6 @@
 package gloomyfolken.hooklib.minecraft;
 
-import cpw.mods.fml.common.Loader;
+import net.minecraftforge.fml.common.Loader;
 import gloomyfolken.hooklib.asm.Hook;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 

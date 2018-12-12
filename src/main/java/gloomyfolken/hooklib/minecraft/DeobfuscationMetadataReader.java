@@ -1,9 +1,9 @@
 package gloomyfolken.hooklib.minecraft;
 
-import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import gloomyfolken.hooklib.asm.ClassMetadataReader;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -49,10 +49,8 @@ public class DeobfuscationMetadataReader extends ClassMetadataReader {
     }
 
     static byte[] deobfuscateClass(String className, byte[] bytes) {
-        if (HookLoader.deobfuscationTransformer != null) {
-            bytes = HookLoader.deobfuscationTransformer.transform(className, className, bytes);
-        }
-        return bytes;
+        return HookLoader.deobfuscationTransformer()
+                .map(deobfuscationTransformer->deobfuscationTransformer.transform(className, className, bytes)).orElse(bytes);
     }
 
     private static byte[] getTransformedBytes(String type) throws IOException {

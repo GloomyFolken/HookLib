@@ -1,0 +1,14 @@
+*.class
+*.log
+.idea/
+*.iml
+/classes/
+/build/
+/run/
+/libs/
+.gradle/
+build.gradle
+gradle.properties
+gradle/
+gradlew*
+
