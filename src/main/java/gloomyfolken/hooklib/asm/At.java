@@ -13,7 +13,7 @@ public @interface At {
     /**
      * Сдвиг относительно точки инъекции
      */
-    public Shift shift() default Shift.BEFORE;
+    public Shift shift() default Shift.AFTER;
 
     /**
      * Конкретизаци, имя метода, например

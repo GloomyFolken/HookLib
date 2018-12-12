@@ -62,10 +62,26 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            super.visitMethodInsn(opcode, owner, name, desc, itf);
+            switch (hook.getShift()) {
+
+                case BEFORE:
+                    visitMethodInsn(name);
+                    super.visitMethodInsn(opcode, owner, name, desc, itf);
+                    break;
+                case AFTER:
+                    super.visitMethodInsn(opcode, owner, name, desc, itf);
+                    visitMethodInsn(name);
+                    break;
+                case INSTEAD:
+                    visitMethodInsn(name);
+                    break;
+            }
+
+        }
+
+        private void visitMethodInsn(String name) {
             if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(name))
                 visitOrderedHook();
-
         }
 
         protected void onMethodEnter() {
