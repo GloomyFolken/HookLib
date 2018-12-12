@@ -815,7 +815,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             }
 
             if (hook.targetMethodName.equals("<init>") && hook.returnCondition != ReturnCondition.NEVER) {
-                throw new IllegalStateException("Can not return from constructor before final fields initialized " +
+                HookClassTransformer.logger.warning("Return from constructor before final fields initialized isn't recommended" +
                         "Don't use targetMethodName = <init> with InjectionPoint.HEAD and with not ReturnCondition.NEVER");
             }
 
