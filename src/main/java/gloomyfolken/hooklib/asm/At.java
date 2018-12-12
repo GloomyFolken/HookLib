@@ -16,7 +16,7 @@ public @interface At {
     public Shift shift() default Shift.AFTER;
 
     /**
-     * Конкретизаци, имя метода, например
+     * Конкретизация, имя метода, например
      */
     public String target() default "";
 
