@@ -62,26 +62,23 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            switch (hook.getShift()) {
-
-                case BEFORE:
-                    visitMethodInsn(name);
-                    super.visitMethodInsn(opcode, owner, name, desc, itf);
-                    break;
-                case AFTER:
-                    super.visitMethodInsn(opcode, owner, name, desc, itf);
-                    visitMethodInsn(name);
-                    break;
-                case INSTEAD:
-                    visitMethodInsn(name);
-                    break;
-            }
-
-        }
-
-        private void visitMethodInsn(String name) {
             if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(name))
-                visitOrderedHook();
+                switch (hook.getShift()) {
+
+                    case BEFORE:
+                        visitOrderedHook();
+                        super.visitMethodInsn(opcode, owner, name, desc, itf);
+                        break;
+                    case AFTER:
+                        super.visitMethodInsn(opcode, owner, name, desc, itf);
+                        visitOrderedHook();
+                        break;
+                    case INSTEAD:
+                        if (!visitOrderedHook())
+                            super.visitMethodInsn(opcode, owner, name, desc, itf);
+                        break;
+                }
+
         }
 
         protected void onMethodEnter() {
@@ -95,14 +92,17 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
         }
 
-        private void visitOrderedHook() {
+        private boolean visitOrderedHook() {
             if (ordinal == 0) {
                 visitHook();
                 ordinal = -2;
+                return true;
             } else if (ordinal == -1) {
                 visitHook();
+                return true;
             } else if (ordinal > 0)
                 ordinal -= 1;
+            return false;
         }
     }
 
