@@ -69,7 +69,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     }
 
     public Shift getShift() {
-        return (Shift) anchor.getOrDefault("shift", Shift.AFTER);
+        return Shift.valueOfNullable((String) anchor.get("shift"));
     }
 
     public Integer getAnchorOrdinal() {
