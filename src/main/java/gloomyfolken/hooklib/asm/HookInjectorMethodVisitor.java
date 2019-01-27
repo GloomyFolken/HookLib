@@ -78,6 +78,8 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
                             super.visitMethodInsn(opcode, owner, name, desc, itf);
                         break;
                 }
+            else
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
 
         }
 
