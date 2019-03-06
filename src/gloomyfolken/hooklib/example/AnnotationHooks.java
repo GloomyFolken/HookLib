@@ -1,5 +1,7 @@
 package gloomyfolken.hooklib.example;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import gloomyfolken.hooklib.asm.Hook;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
 import gloomyfolken.hooklib.asm.ReturnCondition;
@@ -14,6 +16,7 @@ public class AnnotationHooks {
      * Цель: при каждом ресайзе окна выводить в консоль новый размер
      */
     @Hook
+    @SideOnly(Side.CLIENT)
     public static void resize(Minecraft mc, int x, int y) {
         System.out.println("Resize, x=" + x + ", y=" + y);
     }
