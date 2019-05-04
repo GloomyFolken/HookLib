@@ -49,8 +49,8 @@ public class DeobfuscationMetadataReader extends ClassMetadataReader {
     }
 
     static byte[] deobfuscateClass(String className, byte[] bytes) {
-        if (HookLoader.deobfuscationTransformer != null) {
-            bytes = HookLoader.deobfuscationTransformer.transform(className, className, bytes);
+        if (HookLoader.getDeobfuscationTransformer() != null) {
+            bytes = HookLoader.getDeobfuscationTransformer().transform(className, className, bytes);
         }
         return bytes;
     }

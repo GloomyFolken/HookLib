@@ -14,14 +14,11 @@ import java.util.Map;
  */
 public abstract class HookLoader implements IFMLLoadingPlugin {
 
-    static DeobfuscationTransformer deobfuscationTransformer;
+    private static DeobfuscationTransformer deobfuscationTransformer;
 
     private static ClassMetadataReader deobfuscationMetadataReader;
 
     static {
-        if (HookLibPlugin.getObfuscated()) {
-            deobfuscationTransformer = new DeobfuscationTransformer();
-        }
         deobfuscationMetadataReader = new DeobfuscationMetadataReader();
     }
 
@@ -46,6 +43,13 @@ public abstract class HookLoader implements IFMLLoadingPlugin {
 
     public static ClassMetadataReader getDeobfuscationMetadataReader() {
         return deobfuscationMetadataReader;
+    }
+	
+	static DeobfuscationTransformer getDeobfuscationTransformer() {
+        if (HookLibPlugin.getObfuscated() && deobfuscationTransformer == null) {
+            deobfuscationTransformer = new DeobfuscationTransformer();
+        }
+        return deobfuscationTransformer;
     }
 
     // 1.6.x only
