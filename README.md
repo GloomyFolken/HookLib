@@ -39,7 +39,7 @@ allprojects {
     }
 }
 
-project.ext.hooklibVersion = "1.12.x-SNAPSHOT"
+project.ext.hooklibVersion = "master-SNAPSHOT"
 
 shadowJar {
     classifier = ''
