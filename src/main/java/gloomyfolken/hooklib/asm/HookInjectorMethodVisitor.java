@@ -74,7 +74,10 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
                         visitOrderedHook();
                         break;
                     case INSTEAD:
-                        if (!visitOrderedHook())
+                        if (visitOrderedHook())
+                            for (int i = 0; i < Type.getArgumentTypes(desc).length + 1; i++)
+                                visitInsn(Opcodes.POP);
+                        else
                             super.visitMethodInsn(opcode, owner, name, desc, itf);
                         break;
                 }

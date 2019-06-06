@@ -25,7 +25,7 @@ import static org.objectweb.asm.Type.*;
  */
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
-    private HashMap<String, Object> anchor;
+    private HashMap<String, Object> anchor = new HashMap<>();
     private String targetClassName; // через точки
     private String targetMethodName;
     private List<Type> targetMethodParameters = new ArrayList<>(2);

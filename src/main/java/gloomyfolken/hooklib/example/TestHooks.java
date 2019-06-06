@@ -7,23 +7,27 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.tileentity.IHopper;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.ForgeHooks;
 
 public class TestHooks {
+    @Hook(at = @At(point = InjectionPoint.METHOD_CALL, target = "setInventorySlotContents", shift = Shift.INSTEAD))
+    public static void insertStack(TileEntityHopper tile, IInventory source, IInventory destination, ItemStack stack, int index, EnumFacing direction) {
+        System.out.println("test");
+    }
+
     @Hook(at = @At(point = InjectionPoint.METHOD_CALL, target = "getSlotsForFace"), returnCondition = ReturnCondition.ON_TRUE, booleanReturnConstant = true)
-    public static boolean isInventoryFull(TileEntityHopper tile, IInventory inventoryIn, EnumFacing side)
-    {
-        return ((ISidedInventory)inventoryIn).getSlotsForFace(side)==null;
+    public static boolean isInventoryFull(TileEntityHopper tile, IInventory inventoryIn, EnumFacing side) {
+        return ((ISidedInventory) inventoryIn).getSlotsForFace(side) == null;
     }
 
     /**
      * Цель: при каждом ресайзе окна выводить в консоль новый размер, а также похерит ресайз:D
      * Чтобы починить нужно юзать InjectionPoint.RETURN или ReturnCondition.NEVER
      */
-    //@Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
+    @Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
     public static void resize(Minecraft mc, int x, int y) {
         System.out.println("Resize, x=" + x + ", y=" + y);
     }
