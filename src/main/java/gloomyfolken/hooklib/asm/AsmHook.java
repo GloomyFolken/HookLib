@@ -1,11 +1,14 @@
 package gloomyfolken.hooklib.asm;
 
+import com.google.common.collect.ImmutableList;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodEnter;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodExit;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import scala.collection.Seq$;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,11 +28,15 @@ import static org.objectweb.asm.Type.*;
  */
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
-    private HashMap<String, Object> anchor;
+    private HashMap<String, Object> anchor = new HashMap<>();
     private String targetClassName; // через точки
     private String targetMethodName;
     private List<Type> targetMethodParameters = new ArrayList<>(2);
     private Type targetMethodReturnType; //если не задано, то не проверяется
+
+    public String getHooksClassName() {
+        return hooksClassName;
+    }
 
     private String hooksClassName; // через точки
     private String hookMethodName;
@@ -783,7 +790,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * @return полученный хук
          * @throws IllegalStateException если не был вызван какой-либо из обязательных методов
          */
-        public AsmHook build() {
+        public List<AsmHook> build() {
             AsmHook hook = AsmHook.this;
 
             if (hook.createMethod && hook.targetMethodReturnType == null) {
@@ -834,7 +841,16 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                         "because hook location is not return insn.");
             }
 
-            return hook;
+            /*if (hook.getShift() == Shift.INSTEAD) {
+                return ImmutableList.of(hook, AsmHook.newBuilder()
+                        .setTargetClass(hook.getTargetClassName())
+                        .setTargetMethod(hook.getAnchorTarget() + "1")
+                        .addTargetMethodParameters("java.lang.Object")
+                        .setCreateMethod(true)
+                        .build().get(0));
+            } */
+
+            return ImmutableList.of(hook);
         }
 
         private boolean isReturnHook(AsmHook hook) {
