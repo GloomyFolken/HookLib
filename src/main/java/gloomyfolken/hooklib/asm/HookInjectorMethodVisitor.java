@@ -6,6 +6,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
+import java.util.Arrays;
+
 import static gloomyfolken.hooklib.asm.InjectionPoint.HEAD;
 import static gloomyfolken.hooklib.asm.InjectionPoint.METHOD_CALL;
 
@@ -74,7 +76,10 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
                         visitOrderedHook();
                         break;
                     case INSTEAD:
-                        if (!visitOrderedHook())
+                        if (visitOrderedHook())
+                            for (int i = 0; i < Type.getArgumentTypes(desc).length + 1; i++)
+                                visitInsn(Opcodes.POP);
+                        else
                             super.visitMethodInsn(opcode, owner, name, desc, itf);
                         break;
                 }
