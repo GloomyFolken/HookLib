@@ -27,7 +27,7 @@ public class TestHooks {
      * Цель: при каждом ресайзе окна выводить в консоль новый размер, а также похерит ресайз:D
      * Чтобы починить нужно юзать InjectionPoint.RETURN или ReturnCondition.NEVER
      */
-    @Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
+    //@Hook(at = @At(point = InjectionPoint.HEAD), returnCondition = ReturnCondition.ALWAYS)
     public static void resize(Minecraft mc, int x, int y) {
         System.out.println("Resize, x=" + x + ", y=" + y);
     }

@@ -29,6 +29,23 @@ FMLCorePluginContainsFMLMod: true
 Created-By: 1.7.0 (Oracle Corporation)
 ```
 
+Подключение к проекту
+---------------------
+Добавить в build.gradle
+```
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+}
+
+dependencies {
+	...
+    compile 'com.github.hohserg1:HookLib:1.12.x-SNAPSHOT'
+}
+```
+Выполнить Gradle refresh в ide, либо пересобрать проеект
+
 Пример использования
 -------------------
 Полный код и больше примеров есть в gloomyfolken.hooklib.example
