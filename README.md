@@ -1,3 +1,4 @@
+[![](https://jitpack.io/v/hohserg1/HookLib.svg)](https://jitpack.io/#hohserg1/HookLib)
 # HookLib
 Мод, делающий разработку трансформеров необычайно лёгкой.
 
