@@ -11,7 +11,7 @@ import java.util.List;
 
 public class HookClassTransformer {
 
-    public HookLogger logger = new SystemOutLogger();
+    public static HookLogger logger = new SystemOutLogger();
     protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
     private HookContainerParser containerParser = new HookContainerParser(this);
     protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();

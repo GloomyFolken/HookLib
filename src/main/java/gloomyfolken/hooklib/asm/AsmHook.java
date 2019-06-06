@@ -25,7 +25,7 @@ import static org.objectweb.asm.Type.*;
  */
 public class AsmHook implements Cloneable, Comparable<AsmHook> {
 
-    private HashMap<String, Object> anchor;
+    private HashMap<String, Object> anchor = new HashMap<>();
     private String targetClassName; // через точки
     private String targetMethodName;
     private List<Type> targetMethodParameters = new ArrayList<>(2);
@@ -68,8 +68,12 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
         return (String) anchor.get("target");
     }
 
+    public Shift getShift() {
+        return Shift.valueOfNullable((String) anchor.get("shift"));
+    }
+
     public Integer getAnchorOrdinal() {
-        return (Integer) anchor.getOrDefault("ordinal",-1);
+        return (Integer) anchor.getOrDefault("ordinal", -1);
     }
 
     protected String getTargetClassName() {
@@ -811,7 +815,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
             }
 
             if (hook.targetMethodName.equals("<init>") && hook.returnCondition != ReturnCondition.NEVER) {
-                throw new IllegalStateException("Can not return from constructor before final fields initialized " +
+                HookClassTransformer.logger.warning("Return from constructor before final fields initialized isn't recommended" +
                         "Don't use targetMethodName = <init> with InjectionPoint.HEAD and with not ReturnCondition.NEVER");
             }
 

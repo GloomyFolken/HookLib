@@ -4,6 +4,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 public class HookInjectorClassVisitor extends ClassVisitor {
 
     List<AsmHook> hooks;
-    List<AsmHook> injectedHooks = new ArrayList<AsmHook>(1);
+    List<AsmHook> injectedHooks = new ArrayList<>(1);
     boolean visitingHook;
     HookClassTransformer transformer;
 
@@ -23,8 +24,9 @@ public class HookInjectorClassVisitor extends ClassVisitor {
         this.transformer = transformer;
     }
 
-    @Override public void visit(int version, int access, String name,
-                                String signature, String superName, String[] interfaces) {
+    @Override
+    public void visit(int version, int access, String name,
+                      String signature, String superName, String[] interfaces) {
         this.superName = superName;
         super.visit(version, access, name, signature, superName, interfaces);
     }
@@ -33,6 +35,7 @@ public class HookInjectorClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+        
         for (AsmHook hook : hooks) {
             if (isTargetMethod(hook, name, desc) && !injectedHooks.contains(hook)) {
                 // добавляет MethodVisitor в цепочку
