@@ -41,7 +41,7 @@ allprojects {
 
 dependencies {
 	...
-    compile 'com.github.hohserg1:HookLib:1.12.x-SNAPSHOT'
+    compile 'com.github.hohserg1:HookLib:master-SNAPSHOT'
 }
 ```
 Выполнить Gradle refresh в ide, либо пересобрать проеект
