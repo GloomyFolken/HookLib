@@ -34,10 +34,6 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
     private List<Type> targetMethodParameters = new ArrayList<>(2);
     private Type targetMethodReturnType; //если не задано, то не проверяется
 
-    public String getHooksClassName() {
-        return hooksClassName;
-    }
-
     private String hooksClassName; // через точки
     private String hookMethodName;
     // -1 - значение return
