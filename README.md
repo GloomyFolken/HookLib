@@ -51,7 +51,8 @@ dependencies {
     compile "com.github.hohserg1:HookLib:$hooklibVersion"
 }
 ```
-Выполнить Gradle refresh в ide, либо пересобрать проеект
+Выполнить Gradle refresh в ide, либо пересобрать проект
+
 Сборка при помощи `gradlew build shadowJar`
 
 Пример использования
