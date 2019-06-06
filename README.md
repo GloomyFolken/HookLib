@@ -39,12 +39,24 @@ allprojects {
     }
 }
 
+project.ext.hooklibVersion = "1.12.x-SNAPSHOT"
+
+shadowJar {
+    classifier = ''
+
+    dependencies {
+        include(dependency("com.github.hohserg1:HookLib:$hooklibVersion"))
+    }
+}
+
 dependencies {
 	...
-    compile 'com.github.hohserg1:HookLib:master-SNAPSHOT'
+    compile "com.github.hohserg1:HookLib:$hooklibVersion"
 }
 ```
 Выполнить Gradle refresh в ide, либо пересобрать проект
+
+Сборка при помощи `gradlew build shadowJar`
 
 Пример использования
 -------------------
