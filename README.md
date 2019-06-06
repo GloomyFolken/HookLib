@@ -41,7 +41,7 @@ dependencies {
     compile 'com.github.hohserg1:HookLib:1.12.x-SNAPSHOT'
 }
 ```
-Выполнить Gradle refresh в ide, либо пересобрать проеект
+Выполнить Gradle refresh в ide, либо пересобрать проект
 
 Пример использования
 -------------------
