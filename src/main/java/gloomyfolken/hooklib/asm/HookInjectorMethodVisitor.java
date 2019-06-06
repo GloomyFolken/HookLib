@@ -6,8 +6,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
-import java.util.Arrays;
-
 import static gloomyfolken.hooklib.asm.InjectionPoint.HEAD;
 import static gloomyfolken.hooklib.asm.InjectionPoint.METHOD_CALL;
 

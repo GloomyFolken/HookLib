@@ -1,14 +1,11 @@
 package gloomyfolken.hooklib.asm;
 
-import com.google.common.collect.ImmutableList;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodEnter;
 import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodExit;
-import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import scala.collection.Seq$;
 
 import java.util.ArrayList;
 import java.util.HashMap;
