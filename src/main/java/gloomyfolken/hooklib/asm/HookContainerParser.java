@@ -170,7 +170,7 @@ public class HookContainerParser {
             builder.setMandatory(Boolean.TRUE.equals(annotationValues.get("isMandatory")));
         }
 
-        builder.build().forEach(transformer::registerHook);
+        transformer.registerHook(builder.build());
     }
 
     private Object getPrimitiveConstant() {

@@ -790,7 +790,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
          * @return полученный хук
          * @throws IllegalStateException если не был вызван какой-либо из обязательных методов
          */
-        public List<AsmHook> build() {
+        public AsmHook build() {
             AsmHook hook = AsmHook.this;
 
             if (hook.createMethod && hook.targetMethodReturnType == null) {
@@ -841,16 +841,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
                         "because hook location is not return insn.");
             }
 
-            /*if (hook.getShift() == Shift.INSTEAD) {
-                return ImmutableList.of(hook, AsmHook.newBuilder()
-                        .setTargetClass(hook.getTargetClassName())
-                        .setTargetMethod(hook.getAnchorTarget() + "1")
-                        .addTargetMethodParameters("java.lang.Object")
-                        .setCreateMethod(true)
-                        .build().get(0));
-            } */
-
-            return ImmutableList.of(hook);
+            return hook;
         }
 
         private boolean isReturnHook(AsmHook hook) {
