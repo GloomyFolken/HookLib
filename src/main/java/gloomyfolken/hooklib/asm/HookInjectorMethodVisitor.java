@@ -62,7 +62,7 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(name))
+            if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(owner, name, desc)))
                 switch (hook.getShift()) {
 
                     case BEFORE:
