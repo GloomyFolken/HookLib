@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class MinecraftClassTransformer extends HookClassTransformer implements IClassTransformer {
 
-    static MinecraftClassTransformer instance;
+    public static MinecraftClassTransformer instance;
     private Map<Integer, String> methodNames;
 
     private static List<IClassTransformer> postTransformers = new ArrayList<IClassTransformer>();

@@ -1,5 +1,7 @@
 package gloomyfolken.hooklib.asm;
 
+import gloomyfolken.hooklib.minecraft.HookLibPlugin;
+import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -62,7 +64,11 @@ public abstract class HookInjectorMethodVisitor extends AdviceAdapter {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(owner, name, desc)))
+            String targetName =
+                    HookLibPlugin.getObfuscated()
+                            ? MinecraftClassTransformer.instance.getMethodNames().getOrDefault(MinecraftClassTransformer.getMethodId(name), name)
+                            : name;
+            if (hook.getAnchorPoint() == METHOD_CALL && hook.getAnchorTarget().equals(targetName))
                 switch (hook.getShift()) {
 
                     case BEFORE:
