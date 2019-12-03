@@ -54,7 +54,7 @@ dependencies {
     compile "com.github.hohserg1:HookLib:$hooklibVersion"
 }
 ```
-$hooklibVersion должна соответсвовать имени ветки или коммита
+$hooklibVersion должна соответсвовать имени ветки или коммита(посмотреть на jitpack)
 Выполнить Gradle refresh в ide, либо пересобрать проект
 
 Сборка при помощи `gradlew build shadowJar`
